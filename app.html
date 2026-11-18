@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>R10 Barbearia</title>
+<!-- A área do cliente agora fica dentro do site: este endereço antigo só leva até ela. -->
+<script>
+  var abas = { agendamentos: "/agendamentos", plano: "/plano", clube: "/clube" };
+  var h = (location.hash || "").slice(1).split("?")[0];
+  location.replace("index.html#conta" + (abas[h] || ""));
+</script>
+<noscript><meta http-equiv="refresh" content="0;url=index.html#conta"></noscript>
+</head>
+<body></body>
+</html>

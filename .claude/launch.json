@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "r10",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "C:\\Users\\gusta\\OneDrive\\Documentos\\R10 Barbearia\\.claude\\servir.ps1", "-Pasta", "C:\\Users\\gusta\\OneDrive\\Documentos\\R10 Barbearia", "-Porta", "4600"],
+      "port": 4600
+    }
+  ]
+}

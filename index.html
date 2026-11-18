@@ -1,0 +1,2524 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>R10 Barbearia — Agende seu horário</title>
+<meta name="description" content="R10 Barbearia — a barbearia do recorde de 63 atendimentos em um único dia. Cidade Alta e Fluviopolis. Agende seu horário ou assine o Clube.">
+<meta name="theme-color" content="#170807">
+<!-- EM TESTES: fora do Google. Remover esta linha (e o robots.txt / vercel.json) quando o site for lançado. -->
+<meta name="robots" content="noindex, nofollow, noarchive">
+<link rel="icon" type="image/png" href="assets/logo-r10.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Big+Shoulders+Display:wght@600..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sites-incriveis.css">
+<script>/* largada: o R10 já nasce apagado (sem piscar) até a fonte chegar e as luzes acenderem.
+   No celular (r10-movel) a entrada é por tempo, não presa à rolagem — fica lisa a 60 fps. */
+if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  document.documentElement.classList.add("largando");
+  if (matchMedia("(max-width: 900px), (pointer: coarse)").matches) document.documentElement.classList.add("r10-movel");
+}
+/* MODO LEVE: celular fraco (pouca memória, poucos processadores ou "economia de dados" ligada).
+   Os iPhones não informam memória e são rápidos: ficam no modo normal. O site também liga o modo leve
+   sozinho depois, se perceber que a animação do cabelo está pesada (ver "medir o cabelo"). */
+(function(){
+  var raiz = document.documentElement, n = navigator, c = n.connection || {};
+  if (!raiz.classList.contains("r10-movel")) return;
+  var ios = /iP(hone|ad|od)/.test(n.userAgent) || (n.platform === "MacIntel" && n.maxTouchPoints > 1);
+  var pouca = (n.deviceMemory && n.deviceMemory <= 2) || (!ios && n.hardwareConcurrency && n.hardwareConcurrency <= 4);
+  if (pouca || c.saveData || /(^|-)2g$/.test(c.effectiveType || "")) { raiz.classList.add("r10-leve"); return; }
+  // teste de velocidade na entrada: mede 45 quadros logo depois que a página carrega.
+  // Se a tela anda abaixo de ~40 quadros por segundo, o celular é fraco → modo leve.
+  var tempos = [], ultimo = 0;
+  function quadro(t){
+    if (ultimo) tempos.push(t - ultimo);
+    ultimo = t;
+    if (tempos.length < 45) return requestAnimationFrame(quadro);
+    tempos.sort(function(a, b){ return a - b; });
+    if (tempos[22] > 24) raiz.classList.add("r10-leve");
+  }
+  addEventListener("load", function(){ if (!document.hidden) requestAnimationFrame(quadro); });
+})();</script>
+<style>
+/* ============ R10 — identidade ============ */
+:root{
+  --asfalto:#170807;      /* fundo escuro: preto puxado pro vinho da marca */
+  --asfalto-2:#241210;    /* superfície sobre o fundo escuro */
+  --linha:#3B2421;
+  --piso:#E6E1DA;         /* concreto claro do pico */
+  --osso:#F2ECE4;
+  --tinta:#160B0A;
+  --suave:#A8968F;
+  --vinho:#740200;
+  --azul:#1E3A8A;
+  --display:"Big Shoulders Display", "Arial Narrow", sans-serif;
+  --texto:"Archivo", system-ui, sans-serif;
+  /* escala: 15 / 18 / 22 / 30 / 44 / 72 / 120 */
+  --t-15:0.9375rem; --t-18:1.125rem; --t-22:1.375rem; --t-30:1.875rem;
+  --t-44:clamp(2rem,3.4vw,2.75rem); --t-72:clamp(3rem,6vw,4.5rem); --t-120:clamp(4rem,9vw,7.5rem);
+  /* espaço: 8 / 16 / 24 / 40 / 64 / 104 */
+  --e-1:8px; --e-2:16px; --e-3:24px; --e-4:40px; --e-5:64px; --e-6:104px;
+  --margem:clamp(20px,6vw,96px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+/* a página nunca rola para os lados (no iPhone, arrastar na diagonal "puxava" o site). overflow-x no html vale para a tela toda
+   e não atrapalha as seções que ficam presas (sticky); o body continua com clip */
+html{background:var(--asfalto);color:var(--osso);-webkit-text-size-adjust:100%;scroll-behavior:smooth;overflow-x:hidden;overscroll-behavior-x:none}
+.fx-reduzido{scroll-behavior:auto}
+body{font-family:var(--texto);font-size:var(--t-18);line-height:1.5;background:var(--asfalto);color:var(--osso);
+  -webkit-font-smoothing:antialiased;overflow-x:clip}
+img{display:block;max-width:100%}
+a{color:inherit}
+button,input{font:inherit;color:inherit}
+::selection{background:var(--vinho);color:var(--osso)}
+.rotulo{font-family:var(--texto);font-stretch:125%;font-weight:700;font-size:0.8125rem;letter-spacing:0.14em;text-transform:uppercase}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* grão de rua sobre tudo */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:90;opacity:.06;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E")}
+/* no celular o grão sai: uma camada de tela inteira com mix-blend-mode obriga o aparelho a recompor a tela toda a cada quadro */
+@media (hover:none), (pointer:coarse){ body::after{display:none} }
+
+/* ============ MODO LEVE (celular fraco): menos coisas se mexendo, nada travando ============
+   Ligado sozinho na entrada (memória, processadores, economia de dados ou teste de velocidade)
+   ou durante a rolagem, se o cabelo do 63 ficar pesado. */
+.r10-leve [data-fx-paralaxe]{transform:none!important}                         /* sem paralaxe (mexia a cada rolagem) */
+.r10-leve .poste__listras{transform:none!important}                             /* poste parado */
+.r10-leve [data-fx]{transition-duration:.2s!important;transition-delay:0s!important}   /* textos aparecem rápido */
+.r10-leve [data-fx="palavras"] .fx-palavra{transition-duration:.15s!important;transition-delay:0s!important}
+.r10-leve.fx-fundo-ativo body{transition:none}                                  /* troca de cor de fundo sem transição */
+.r10-leve .painel::backdrop,.r10-leve .dialogo::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}  /* desfoque pesa muito */
+.r10-leve .largada__janela,.r10-leve .barbeiro__card,.r10-leve .familia__foto{box-shadow:none}
+.r10-leve .barbeiro__card img{transition:none}
+
+/* revelações do motor um pouco mais rápidas (o motor não é editado: aqui só sobrescrevemos a duração) */
+[data-fx="surgir"],[data-fx="subir"],[data-fx="esquerda"],[data-fx="direita"],[data-fx="crescer"]{transition-duration:.45s}
+[data-fx="subir"]{transform:translate3d(0,26px,0)}
+[data-fx="palavras"] .fx-palavra{transition-duration:.32s}
+/* troca de cor de fundo entre as seções: mais rápida (o motor usa 0,7 s) */
+.fx-fundo-ativo body{transition:background .35s ease, color .35s ease}
+
+/* ============ menu: botão de 3 barrinhas que acompanha a rolagem ============ */
+/* sem fundo: a cor das barrinhas troca conforme o fundo que passa por trás (JS) */
+.menu-botao{position:fixed;top:clamp(14px,2.2vw,24px);right:clamp(10px,2vw,28px);z-index:85;width:56px;height:56px;border:0;border-radius:4px;cursor:pointer;
+  background:transparent;color:var(--osso);display:grid;place-items:center;filter:drop-shadow(0 1px 3px rgba(0,0,0,.3));
+  transition:transform .3s cubic-bezier(.22,1,.36,1), color .35s}
+.menu-botao[data-tom="escuro"]{filter:none}
+.menu-botao[data-tom="escuro"]{color:var(--tinta)}
+.menu-aberto .menu-botao{color:var(--osso)}
+.menu-botao:hover{transform:scale(1.08)}
+.menu-botao:focus:not(:focus-visible){outline:none}
+.menu-botao__barras{position:relative;width:30px;height:20px}
+.menu-botao__barras i{position:absolute;left:0;width:100%;height:3px;border-radius:2px;background:currentColor;
+  transition:transform .45s cubic-bezier(.22,1,.36,1), opacity .2s, top .45s cubic-bezier(.22,1,.36,1), width .3s, left .3s}
+.menu-botao__barras i:nth-child(1){top:0}
+.menu-botao__barras i:nth-child(2){top:8.5px;width:70%;left:30%}
+.menu-botao__barras i:nth-child(3){top:17px}
+.menu-botao:hover .menu-botao__barras i:nth-child(2){width:100%;left:0}
+.menu-aberto .menu-botao__barras i:nth-child(1){top:8.5px;transform:rotate(45deg)}
+.menu-aberto .menu-botao__barras i:nth-child(2){opacity:0}
+.menu-aberto .menu-botao__barras i:nth-child(3){top:8.5px;transform:rotate(-45deg)}
+
+.menu{position:fixed;inset:0;z-index:80;background:var(--vinho);color:var(--osso);display:flex;flex-direction:column;justify-content:center;
+  padding:var(--e-6) var(--margem) var(--e-5);visibility:hidden;clip-path:circle(0 at calc(100% - 60px) 52px);
+  transition:clip-path .42s cubic-bezier(.77,0,.18,1), visibility 0s linear .42s}
+.menu-aberto .menu{visibility:visible;clip-path:circle(150vmax at calc(100% - 60px) 52px);transition:clip-path .42s cubic-bezier(.77,0,.18,1), visibility 0s}
+.menu__rotulo{color:rgba(242,236,228,.7);margin-bottom:var(--e-4)}
+.menu__lista{list-style:none;display:grid;gap:clamp(8px,2svh,20px)}
+.menu__lista a{display:flex;align-items:baseline;gap:var(--e-3);flex-wrap:wrap;text-decoration:none;
+  opacity:0;transform:translateY(40px);transition:opacity .5s, transform .7s cubic-bezier(.22,1,.36,1)}
+.menu-aberto .menu__lista a{opacity:1;transform:none}
+.menu-aberto .menu__lista li:nth-child(1) a{transition-delay:.1s}
+.menu-aberto .menu__lista li:nth-child(2) a{transition-delay:.14s}
+.menu-aberto .menu__lista li:nth-child(3) a{transition-delay:.18s}
+.menu__lista strong{font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:clamp(2.5rem,6.5vw,5.25rem);line-height:.9;
+  transition:color .25s, transform .4s cubic-bezier(.22,1,.36,1)}
+.menu__lista span{font-size:var(--t-15);color:rgba(242,236,228,.75);max-width:30ch}
+.menu__lista a:focus:not(:focus-visible){outline:none}
+.menu__lista a:hover strong{color:#fff;transform:translateX(12px)}
+.menu__rodape{display:flex;flex-wrap:wrap;gap:var(--e-2) var(--e-4);margin-top:var(--e-5);font-size:var(--t-15);
+  opacity:0;transition:opacity .3s .2s}
+.menu-aberto .menu__rodape{opacity:1}
+/* site à esquerda, conta à direita (no celular, um embaixo do outro) */
+.menu{overflow-y:auto;overscroll-behavior:contain}
+.menu__grade{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.9fr);gap:var(--e-5);align-items:start;width:100%;max-width:1200px}
+.menu__conta{padding:var(--e-4) var(--e-3) var(--e-3);border-radius:14px;background:rgba(23,8,7,.32);box-shadow:inset 0 0 0 1px rgba(242,236,228,.16);
+  opacity:0;transform:translateY(24px);transition:opacity .3s .16s, transform .4s .16s cubic-bezier(.22,1,.36,1)}
+.menu-aberto .menu__conta{opacity:1;transform:none}
+.menu__conta .menu__rotulo{margin-bottom:var(--e-3)}
+.menu__entrar{width:calc(100% - 22px);white-space:nowrap;justify-content:space-between;padding-right:24px}
+.menu__atalhos{list-style:none;display:grid;margin-top:var(--e-3)}
+.menu__atalhos a{display:flex;align-items:center;gap:14px;padding:15px 4px;text-decoration:none;font-weight:700;font-size:var(--t-18);
+  border-bottom:1px solid rgba(242,236,228,.14);transition:padding .3s cubic-bezier(.22,1,.36,1), color .2s}
+.menu__atalhos li:last-child a{border-bottom:0}
+.menu__atalhos a:hover{padding-left:12px;color:#fff}
+.menu__atalhos svg{width:22px;height:22px;flex:none;opacity:.85}
+@media (max-width:900px){
+  .menu{justify-content:flex-start;padding:96px var(--margem) var(--e-4)}
+  .menu__grade{grid-template-columns:1fr;gap:var(--e-4)}
+  .menu__conta{order:-1}            /* celular: "Sua conta" primeiro, depois Agendar / Recorde / Planos */
+  /* os três itens no mesmo padrão: título grande e o texto pequeno logo embaixo, alinhados à esquerda */
+  .menu__lista a{flex-direction:column;align-items:flex-start;gap:6px}
+  .menu__lista span{max-width:34ch;line-height:1.35}
+  .menu__lista strong{font-size:clamp(2.4rem,12vw,3.4rem)}
+  .menu__rotulo{margin-bottom:var(--e-3)}
+  .menu__conta{padding:var(--e-3) var(--e-2) var(--e-2)}
+  .menu__entrar{font-size:var(--t-15);padding:17px 20px 17px 42px}
+  .passe .botao{font-size:var(--t-15);padding:17px 20px 17px 40px}
+  .reserva__resumo .botao,.painel__cta{font-size:var(--t-15);padding:17px 20px 17px 40px}
+}
+.menu-aberto body{overflow:hidden}
+.fx-reduzido .menu{clip-path:none;opacity:0;transition:opacity .2s, visibility 0s linear .2s}
+.fx-reduzido.menu-aberto .menu{opacity:1;transition:opacity .2s}
+.fx-reduzido .menu__lista a{transform:none;transition:opacity .2s}
+
+/* ============ CTAs em formato de MÁQUINA DE CORTAR CABELO ============
+   corpo arredondado (o cabo), sulco do botão liga/desliga, lâmina metálica com dentes na ponta.
+   Ao passar o mouse, a lâmina vibra — como a máquina ligando. */
+.botao{
+  --corpo:linear-gradient(180deg,#ffffff 0%,var(--osso) 42%,#d6cbbf 100%);
+  --sulco:rgba(116,2,0,.38); --brilho:rgba(255,255,255,.95); --texto:var(--vinho);
+  position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:14px;
+  text-decoration:none;font-weight:800;font-stretch:112%;font-size:var(--t-18);letter-spacing:.01em;
+  padding:19px 30px 19px 46px;margin-right:22px;border:0;cursor:pointer;color:var(--texto);white-space:nowrap;
+  border-radius:44px 9px 9px 44px / 50% 22% 22% 50%;
+  background:
+    linear-gradient(var(--sulco),var(--sulco)) 20px 50% / 3px 44% no-repeat,
+    linear-gradient(var(--sulco),var(--sulco)) 26px 50% / 3px 44% no-repeat,
+    var(--corpo);
+  box-shadow: inset 0 2px 0 var(--brilho), inset 0 -4px 8px rgba(0,0,0,.14), 0 16px 30px -12px rgba(0,0,0,.75);
+  transition:transform .3s cubic-bezier(.22,1,.36,1), filter .25s}
+/* placa da lâmina */
+.botao::before{content:"";position:absolute;z-index:-1;right:-10px;top:11%;bottom:11%;width:14px;border-radius:2px 3px 3px 2px;
+  background:linear-gradient(90deg,#4f4b48 0%,#efebe6 38%,#a19c96 70%,#d9d4ce 100%);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.28), 0 4px 10px -4px rgba(0,0,0,.6)}
+/* dentes do pente */
+.botao::after{content:"";position:absolute;z-index:-1;right:-20px;top:15%;bottom:15%;width:11px;
+  background:linear-gradient(90deg,#e4dfd9 0%,#b7b1aa 55%,#7d7873 100%);
+  border-radius:0 2px 2px 0;
+  -webkit-mask-image:repeating-linear-gradient(180deg,#000 0 2.6px,transparent 2.6px 4.6px);
+          mask-image:repeating-linear-gradient(180deg,#000 0 2.6px,transparent 2.6px 4.6px)}
+.botao:hover{transform:translateY(-3px);filter:brightness(1.05)}
+.botao:hover::before,.botao:hover::after{animation:zumbido .07s linear infinite}
+@keyframes zumbido{0%,100%{transform:translateY(-.7px)}50%{transform:translateY(.7px)}}
+.fx-reduzido .botao:hover::before,.fx-reduzido .botao:hover::after{animation:none}
+.botao svg{width:20px;height:20px;flex:none;transition:transform .3s}
+.botao:hover svg{transform:translateX(5px)}
+/* máquina vinho (sobre fundo claro) */
+.botao--vinho{--corpo:linear-gradient(180deg,#a3140c 0%,var(--vinho) 48%,#4d0100 100%);--sulco:rgba(0,0,0,.4);--brilho:rgba(255,255,255,.28);--texto:var(--osso)}
+/* máquina preta (a clássica), com contorno claro para aparecer no fundo escuro */
+.botao--linha{--corpo:linear-gradient(180deg,#4a3533 0%,#2a1715 50%,#120706 100%);--sulco:rgba(242,236,228,.35);--brilho:rgba(255,255,255,.22);--texto:var(--osso);
+  box-shadow: inset 0 0 0 1.5px rgba(242,236,228,.55), inset 0 2px 0 var(--brilho), 0 16px 30px -12px rgba(0,0,0,.8)}
+/* máquina verde: comprovante no WhatsApp */
+.botao--whats{--corpo:linear-gradient(180deg,#3fc46f 0%,#25A244 48%,#167a31 100%);--sulco:rgba(0,0,0,.3);--brilho:rgba(255,255,255,.35);--texto:#fff}
+.botao--cheio{width:calc(100% - 22px);white-space:normal;text-align:center}   /* botão largo pode quebrar: nunca empurra o cartão para fora da tela */
+.link-seco{font-weight:600;text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:2px}
+:focus-visible{outline:2px solid var(--osso);outline-offset:4px}
+
+/* ============ POSTE-VELOCÍMETRO (assinatura B) ============ */
+.poste{position:fixed;right:clamp(14px,2.4vw,32px);bottom:calc(clamp(16px,3svh,32px) + env(safe-area-inset-bottom));z-index:60;
+  display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--osso);
+  transition:transform .6s cubic-bezier(.22,1,.36,1), opacity .4s}
+.poste.recolhido{transform:translateX(calc(100% + 40px));opacity:0;pointer-events:none}
+/* sem filter no corpo: as listras giram sem parar e o filtro obrigava a repintar a sombra a cada quadro */
+.poste__corpo{position:relative;width:30px;height:118px;display:flex;flex-direction:column;align-items:center;border-radius:15px;box-shadow:0 10px 22px -6px rgba(0,0,0,.55)}
+.poste__tampa{width:30px;height:12px;border-radius:15px 15px 3px 3px;background:linear-gradient(90deg,#6e6a66,#e9e5df 45%,#8d8883)}
+.poste__tampa--base{border-radius:3px 3px 15px 15px}
+.poste__tubo{position:relative;width:22px;flex:1;overflow:hidden;border-radius:2px;background:var(--osso);
+  box-shadow:inset -5px 0 8px rgba(0,0,0,.28), inset 4px 0 6px rgba(255,255,255,.5)}
+.poste__listras{position:absolute;left:0;right:0;top:-72px;bottom:0;will-change:transform;
+  background:repeating-linear-gradient(60deg,var(--vinho) 0 12px,var(--osso) 12px 18px,var(--azul) 18px 30px,var(--osso) 30px 36px)}
+.poste__tubo::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.18),transparent 35%,rgba(255,255,255,.35) 55%,transparent 70%,rgba(0,0,0,.22))}
+.poste__fala{display:flex;flex-direction:column;align-items:flex-end;gap:5px;background:var(--osso);color:var(--vinho);padding:12px 16px;border-radius:3px;
+  box-shadow:0 10px 26px rgba(0,0,0,.4)}
+.poste__acao{font-weight:800;font-stretch:112%;font-size:var(--t-15);line-height:1}
+/* o botão do poste mostra só "Agendar" (sem "No box" / "No ritmo") */
+.poste__ritmo{display:none}
+.poste:hover .poste__fala{background:#fff}
+
+/* ============ 1. LARGADA ============ */
+.largada__palco{background:var(--asfalto);overflow:hidden}   /* nada da abertura (letras, foto) vaza para os lados */
+/* celular: altura fixa da tela (svh) no topo — com 100dvh ela mudava junto com a barra do Safari ao rolar */
+.r10-movel .largada__palco{height:100svh}
+.luzes{position:absolute;top:clamp(68px,9svh,96px);left:0;right:0;display:flex;justify-content:center;z-index:4;pointer-events:none}
+.luzes__trilho{display:flex;gap:clamp(8px,1.2vw,16px)}
+.luz{display:flex;flex-direction:column;gap:6px;padding:7px;background:#070202;border-radius:6px;border:1px solid #33201d}
+.luz i{display:block;width:clamp(16px,2vw,26px);aspect-ratio:1;border-radius:50%;background:#241513;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.6);transition:background .08s, box-shadow .08s}
+.luz.acesa i{background:radial-gradient(circle at 38% 34%,#d8463a 0,#a01208 38%,var(--vinho) 70%,#3d0100 100%);
+  box-shadow:0 0 22px 2px rgba(160,18,8,.55), inset 0 -2px 3px rgba(0,0,0,.35)}
+/* a janela é posicionada por JS: cresce, mas nunca cobre o texto */
+.largada__janela{position:absolute;left:0;top:0;z-index:1;margin:0;overflow:hidden;border-radius:3px;transform-origin:0 0;will-change:transform;
+  box-shadow:0 40px 80px -30px rgba(0,0,0,.8)}
+.largada__janela img{width:100%;height:100%;object-fit:cover}
+.largada__letras{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-weight:900;line-height:.8;color:var(--osso);font-size:min(54svh,74vw);
+  letter-spacing:-0.02em;pointer-events:none;translate:0 -4%}
+.largada__letras > span{display:block}
+/* entrada do R10: só opacity + transform (GPU). will-change apenas durante a entrada. */
+.largada__letras b{display:block;font-weight:inherit;transform:translate3d(0,0,0);backface-visibility:hidden;
+  transition:opacity .32s ease-out, transform .45s cubic-bezier(.22,1,.36,1)}
+.largando .largada__letras b{opacity:.07;transform:translate3d(0,0,0) scale(1.03);will-change:opacity,transform}
+.largou .largada__letras b{will-change:opacity,transform}
+
+/* ===== Celular: entrada do R10 por TEMPO (não presa à rolagem). Só transform e opacity, na GPU. =====
+   1) luzes  2) "R" e "10" sobem de dentro de uma máscara  3) as metades abrem como portas e a foto aparece */
+.r10-movel .largada__letras > span{overflow:hidden;padding:.06em 0 .03em;transform:translate3d(0,0,0);
+  transition:transform .75s cubic-bezier(.77,0,.18,1);will-change:transform}
+.r10-movel .largada__letras b,
+.r10-movel.largando .largada__letras b{opacity:1;transform:translate3d(0,110%,0);transition:transform .6s cubic-bezier(.22,1,.36,1);will-change:transform}
+.r10-movel .largada__letras .l-10 b{transition-delay:.07s}
+.r10-movel.r10-sobe .largada__letras b{transform:translate3d(0,0,0)}
+.r10-movel.r10-abre .largada__letras .l-r{transform:translate3d(-82vw,0,0)}
+.r10-movel.r10-abre .largada__letras .l-10{transform:translate3d(82vw,0,0)}
+/* depois da abertura as letras saem da página (display:none): escondidas fora da tela, faziam o iPhone deixar arrastar para os lados */
+.r10-movel.r10-fim .largada__letras{display:none}
+.r10-movel.r10-fim .largada__letras *{will-change:auto}
+.r10-movel .largada__janela{opacity:0;transition:transform .8s cubic-bezier(.22,1,.36,1), opacity .35s ease-out}
+.r10-movel.r10-abre .largada__janela{opacity:1}
+.r10-movel .luzes{transition:opacity .3s ease-out, transform .45s cubic-bezier(.22,1,.36,1)}
+.r10-movel.r10-abre .luzes{opacity:0;transform:translate3d(0,-24px,0)}
+.r10-movel .luz i{transition:background .06s, box-shadow .06s}
+.largada__letras .l-10{margin-left:0.04em}
+.largada__texto{position:absolute;z-index:3;left:var(--margem);bottom:clamp(28px,7svh,72px);max-width:560px}
+.largada__texto .rotulo{color:var(--suave);margin-bottom:var(--e-2)}
+.largada__texto h1{font-family:var(--display);font-weight:800;font-size:var(--t-72);line-height:.92;letter-spacing:.005em;text-transform:uppercase;margin-bottom:var(--e-3)}
+.largada__texto h1 span{color:var(--suave)}
+.largada__acoes{display:flex;align-items:center;gap:var(--e-2);flex-wrap:wrap}
+
+/* ============ 2. O RECORDE — PICO ============ */
+.recorde__palco{display:block;color:var(--tinta)}
+.recorde__foto{position:absolute;z-index:1;right:max(var(--margem),6vw);top:50%;height:min(76svh,700px);aspect-ratio:433/581;translate:0 -50%;
+  margin:0;opacity:0;clip-path:inset(100% 0 0 0);box-shadow:0 30px 60px -20px rgba(22,11,10,.45)}
+.recorde__foto img{width:100%;height:100%;object-fit:cover}
+.recorde__fios{position:absolute;inset:0;z-index:2;width:100%;height:100%;pointer-events:none}
+.recorde__topo{position:absolute;z-index:3;left:var(--margem);top:clamp(88px,15svh,150px);width:min(36vw,500px)}
+.recorde__topo .rotulo{color:var(--vinho);margin-bottom:var(--e-2)}
+.recorde__topo h2{font-family:var(--texto);font-weight:700;font-stretch:88%;font-size:var(--t-30);line-height:1.12;letter-spacing:-.01em}
+.recorde__base{position:absolute;z-index:3;left:var(--margem);bottom:clamp(28px,8svh,80px);width:min(36vw,500px)}
+.contador{display:flex;align-items:flex-end;gap:var(--e-3)}
+.contador__num{font-family:var(--display);font-weight:900;font-size:clamp(120px,24svh,250px);line-height:.78;color:var(--vinho);
+  font-variant-numeric:tabular-nums;letter-spacing:-.01em;min-width:1.05em;min-height:.78em}   /* guarda o espaço enquanto está vazio */
+.contador__rotulo{font-stretch:125%;font-weight:700;font-size:0.8125rem;letter-spacing:.14em;text-transform:uppercase;padding-bottom:6px;max-width:150px;line-height:1.35}
+.voltas{display:grid;grid-template-columns:repeat(21,1fr);gap:4px 3px;margin-top:var(--e-3);max-width:420px}
+.voltas i{display:block;height:14px;background:rgba(22,11,10,.13);transition:background .15s}
+.voltas i.aceso{background:var(--vinho)}
+
+/* ============ 3. CLUBE ============ */
+.clube{padding:var(--e-6) var(--margem) calc(var(--e-6) * 1.4);background:var(--vinho);color:var(--osso)}
+.clube__grade{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--e-4);align-items:start;max-width:1400px;margin:0 auto}
+.clube__intro{grid-column:1 / span 5;position:sticky;top:18svh}
+.clube__intro .rotulo{margin-bottom:var(--e-3);opacity:.8}
+.clube__intro h2{font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:var(--t-72);line-height:.95;margin-bottom:var(--e-3)}
+.clube__intro p{max-width:34ch;opacity:.9}
+.clube__planos{grid-column:7 / span 6;display:grid;gap:var(--e-3);padding-top:var(--e-5)}
+.passe{position:relative;border:1px solid rgba(242,236,228,.35);padding:var(--e-5) var(--e-4) var(--e-4);border-radius:4px;background:rgba(23,8,7,.22)}
+.passe::before{content:"";position:absolute;top:18px;left:50%;width:56px;height:10px;translate:-50% 0;border-radius:6px;background:var(--vinho);
+  box-shadow:inset 0 0 0 1px rgba(242,236,228,.35)}
+.passe h3{font-family:var(--texto);font-weight:700;font-size:var(--t-22);margin-bottom:var(--e-3)}
+.preco{display:flex;align-items:flex-start;gap:6px;font-family:var(--display);font-weight:900;line-height:.82;font-variant-numeric:tabular-nums}
+.preco__moeda{font-size:var(--t-30);padding-top:.25em}
+.preco__valor{font-size:clamp(96px,11vw,168px);letter-spacing:-.01em}
+.preco__cent{font-size:var(--t-44);padding-top:.12em}
+.passe__mes{margin-top:var(--e-2);opacity:.85}
+.passe__mes + .passe__vantagens{margin-top:var(--e-3)}   /* sem a linha de vigência: mantém o respiro antes de "Confira as vantagens" */
+.passe__vantagens{display:inline-flex;align-items:center;gap:10px;margin:0 0 var(--e-3);padding:6px 0;border:0;background:none;cursor:pointer;
+  color:var(--osso);font-weight:700;font-size:var(--t-18);text-decoration:underline;text-decoration-color:rgba(242,236,228,.4);text-underline-offset:5px}
+.passe__vantagens svg{width:18px;height:18px;transition:transform .3s cubic-bezier(.22,1,.36,1)}
+.passe__vantagens:hover svg{transform:translateX(5px)}
+
+/* ============ 4. FAMÍLIA ============ */
+.familia__palco{background:var(--asfalto)}
+/* a foto ocupa no máximo 42% da largura; o texto começa DEPOIS dela (nunca passa por cima em notebook) */
+.familia{--fam-w:min(calc(80svh * 512 / 590), 660px, 42vw)}
+.familia__foto{position:absolute;z-index:1;left:var(--margem);top:50%;width:var(--fam-w);aspect-ratio:512/590;translate:0 -50%;overflow:hidden;margin:0;border-radius:3px;
+  box-shadow:0 40px 80px -30px rgba(0,0,0,.8)}
+.familia__foto img{width:100%;height:100%;object-fit:cover;transform-origin:50% 60%}
+.familia__texto{position:absolute;z-index:2;left:calc(var(--margem) + var(--fam-w) + clamp(28px,4vw,72px));right:calc(var(--margem) + 72px);top:50%;translate:0 -50%;text-align:right;
+  display:flex;flex-direction:column;align-items:flex-end}
+.familia__texto .rotulo{color:var(--suave);margin-bottom:var(--e-3)}
+.familia__texto h2{font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:clamp(2.25rem,min(5.2vw,7.4svh),4.5rem);line-height:.95;margin-bottom:var(--e-4);
+  max-width:560px;overflow-wrap:break-word}
+
+/* ============ 5. AGENDAR — reserva em etapas (login só na confirmação) ============ */
+.agendar{padding:var(--e-6) var(--margem) var(--e-6)}
+.agendar__topo{max-width:1400px;margin:0 auto var(--e-5)}
+.agendar__topo .rotulo{color:var(--suave);margin-bottom:var(--e-3)}
+/* entrelinha maior que nos outros títulos: o acento de "RÁPIDO" precisa de espaço para não encostar na linha de cima */
+.agendar__topo h2{font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:var(--t-120);line-height:1.02;margin-bottom:var(--e-3)}
+.agendar__topo p{max-width:46ch;color:#D9CCC5}
+
+.reserva{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--e-4);max-width:1400px;margin:0 auto;align-items:start}
+.reserva__passos{grid-column:1 / span 8;display:grid;gap:12px;min-width:0}
+
+/* etapa = sanfona: aberta, feita (mostra a escolha) ou fechada */
+.passo{border-radius:8px;box-shadow:inset 0 0 0 1px var(--linha);transition:background .35s, box-shadow .35s;min-width:0}
+.passo[data-estado="aberto"]{background:rgba(36,18,16,.6);box-shadow:inset 0 0 0 1px #5d3a35}
+.passo__cab{display:flex;align-items:center;gap:16px;width:100%;padding:20px 22px;background:none;border:0;text-align:left;color:inherit;cursor:pointer;border-radius:8px;transition:background .2s}
+.passo__cab:hover{background:rgba(242,236,228,.04)}
+.passo[data-estado="fechado"] .passo__cab:hover .passo__titulo,.passo[data-estado="fechado"] .passo__cab:hover .passo__num{opacity:.75}
+.passo__num{flex:none;font-family:var(--display);font-weight:900;font-size:2rem;line-height:.8;color:#B0241A;min-width:1.4em;font-variant-numeric:tabular-nums}
+.passo[data-estado="feito"] .passo__num{color:var(--osso)}
+.passo__titulo{font-stretch:125%;font-weight:700;font-size:.875rem;letter-spacing:.14em;text-transform:uppercase}
+.passo[data-estado="fechado"] .passo__titulo,.passo[data-estado="fechado"] .passo__num{opacity:.45}
+.passo__escolha{margin-left:auto;min-width:0;font-weight:600;font-size:var(--t-15);color:#E8DCD5;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* indicadores: check verde quando a etapa está preenchida, seta que gira quando abre */
+.passo__ok{flex:none;width:20px;height:20px;border-radius:50%;background:#2E9E5B;display:grid;place-items:center;margin-left:-4px;
+  opacity:0;transform:scale(.4);transition:opacity .25s, transform .35s cubic-bezier(.34,1.56,.64,1)}
+.passo__ok svg{width:11px;height:11px}
+.passo.ok .passo__ok{opacity:1;transform:none}
+.passo__seta{flex:none;width:14px;height:14px;color:var(--suave);transition:transform .3s cubic-bezier(.22,1,.36,1), color .2s}
+.passo__cab:hover .passo__seta{color:var(--osso)}
+.passo[data-estado="aberto"] .passo__seta{transform:rotate(180deg)}
+.fx-reduzido .passo__seta,.fx-reduzido .passo__ok{transition:none}
+.passo__alterar{flex:none;font-size:.8125rem;font-weight:700;color:var(--suave);text-decoration:underline;text-underline-offset:3px;display:none}
+.passo[data-estado="feito"] .passo__alterar{display:inline}
+.passo__corpo{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s cubic-bezier(.22,1,.36,1)}
+.passo__corpo > div{overflow:hidden;min-height:0}
+.passo[data-estado="aberto"] .passo__corpo{grid-template-rows:1fr}
+.passo__dentro{padding:2px 22px 26px}
+.passo__acoes{display:flex;justify-content:flex-end;margin-top:18px;padding-right:4px}
+.passo__dica{color:var(--suave);font-size:var(--t-15)}
+.passo__erro{color:#FFA394;font-weight:600;font-size:var(--t-15);margin-top:14px}
+.passo__erro:empty{display:none}
+.fx-reduzido .passo__corpo{transition:none}
+
+.opcoes{display:grid;gap:12px}
+.opcoes--2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.opcao{position:relative;display:block;cursor:pointer}
+.opcao input{position:absolute;opacity:0;pointer-events:none}
+.opcao__caixa{display:flex;flex-direction:column;gap:6px;height:100%;padding:20px 22px;border-radius:6px;background:var(--asfalto-2);
+  box-shadow:inset 0 0 0 1px var(--linha);transition:box-shadow .2s, background .2s, transform .2s}
+.opcao:hover .opcao__caixa{box-shadow:inset 0 0 0 1px #6b4440}
+.opcao input:checked + .opcao__caixa{background:#341613;box-shadow:inset 0 0 0 2px var(--osso)}
+.opcao input:focus-visible + .opcao__caixa{outline:2px solid var(--osso);outline-offset:3px}
+.opcao__titulo{font-family:var(--display);font-weight:800;font-size:var(--t-30);text-transform:uppercase;line-height:1}
+.opcao__sub{font-size:var(--t-15);color:#CBBDB6}
+.opcao__sub a{font-weight:600}
+
+/* barbeiros: retrato em duotone vinho; ao escolher, a foto ganha cor */
+.barbeiros{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:640px}
+.barbeiro{position:relative;display:block;cursor:pointer}
+.barbeiro input{position:absolute;opacity:0;pointer-events:none}
+.barbeiro__card{position:relative;display:block;aspect-ratio:3/4;border-radius:8px;overflow:hidden;background:var(--vinho);
+  box-shadow:inset 0 0 0 1px var(--linha);transition:transform .45s cubic-bezier(.22,1,.36,1), box-shadow .25s}
+.barbeiro__card img{width:100%;height:100%;object-fit:cover;object-position:50% 22%;filter:grayscale(1) contrast(1.12) brightness(.82);transform:scale(1.05);
+  transition:filter .55s, transform .8s cubic-bezier(.22,1,.36,1)}
+.barbeiro__card::before{content:"";position:absolute;inset:0;z-index:1;background:var(--vinho);mix-blend-mode:multiply;opacity:.6;transition:opacity .5s}
+.barbeiro__card::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,transparent 48%,rgba(14,5,4,.92) 100%)}
+.barbeiro__info{position:absolute;left:14px;right:12px;bottom:12px;z-index:2}
+.barbeiro__nome{display:block;font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:1.75rem;line-height:.95}
+.barbeiro__horas{display:block;margin-top:6px;font-size:.75rem;line-height:1.4;color:#E6D9D1}
+.barbeiro__horas span{display:block}
+.barbeiro__selo{position:absolute;top:10px;right:10px;z-index:2;width:30px;height:30px;border-radius:50%;background:var(--osso);display:grid;place-items:center;
+  opacity:0;transform:scale(.5);transition:opacity .25s, transform .35s cubic-bezier(.34,1.56,.64,1)}
+.barbeiro__selo svg{width:15px;height:15px}
+.barbeiro:hover .barbeiro__card img{filter:grayscale(.3) contrast(1.05);transform:scale(1.02)}
+.barbeiro:hover .barbeiro__card::before{opacity:.3}
+.barbeiro input:checked + .barbeiro__card{box-shadow:0 0 0 2px var(--osso), 0 24px 44px -20px rgba(0,0,0,.85);transform:translateY(-4px)}
+.barbeiro input:checked + .barbeiro__card img{filter:none;transform:scale(1)}
+.barbeiro input:checked + .barbeiro__card::before{opacity:0}
+.barbeiro input:checked + .barbeiro__card .barbeiro__selo{opacity:1;transform:none}
+.barbeiro input:focus-visible + .barbeiro__card{outline:2px solid var(--osso);outline-offset:3px}
+.barbeiro--qualquer .barbeiro__card{background:radial-gradient(circle at 50% 32%,#9a0a05 0,var(--vinho) 55%,#3a0100 100%)}
+.barbeiro--qualquer .barbeiro__card::before{display:none}
+.barbeiro__r10{position:absolute;inset:0 0 28% 0;z-index:2;display:grid;place-items:center;font-family:var(--display);font-weight:900;font-size:3.75rem;color:rgba(242,236,228,.92);letter-spacing:-.02em}
+
+/* serviços: a torre de tempos virou o seletor */
+.torre{background:var(--asfalto-2);border-radius:6px;padding:var(--e-2) 0 6px;box-shadow:inset 0 0 0 1px var(--linha)}
+.torre__cab{display:flex;justify-content:space-between;padding:0 var(--e-3) var(--e-2);color:var(--suave);border-bottom:1px solid var(--linha)}
+.torre__linha{display:grid;grid-template-columns:4px 26px 1fr auto;align-items:center;gap:var(--e-2);padding:14px var(--e-3) 14px 0;
+  border-bottom:1px solid #2e1916;cursor:pointer;transition:background .2s}
+.torre__linha:last-child{border-bottom:0}
+.torre__linha::before{content:"";align-self:stretch;background:#4a2d29;transition:background .2s}
+.torre__linha:hover{background:#2c1513}
+.torre__linha input{position:absolute;opacity:0;pointer-events:none}
+.torre__check{width:22px;height:22px;border-radius:4px;box-shadow:inset 0 0 0 1.5px #7a5853;display:grid;place-items:center;transition:background .2s, box-shadow .2s, transform .25s}
+.torre__check svg{width:14px;height:14px;opacity:0;transition:opacity .15s}
+.torre__linha:has(input:checked){background:#3f1915}
+.torre__linha:has(input:checked) .torre__nome{font-weight:800}
+.torre__linha:has(input:checked)::before{background:var(--osso)}
+.torre__linha:has(input:checked) .torre__check{background:var(--osso);box-shadow:none;transform:scale(1.08)}
+.torre__linha:has(input:checked) .torre__check svg{opacity:1}
+.torre__linha:has(input:focus-visible){outline:2px solid var(--osso);outline-offset:-2px}
+.torre__nome{font-weight:600;font-size:var(--t-18);line-height:1.2}
+.torre__nome em{display:inline-block;margin-left:10px;font-style:normal;font-stretch:125%;font-weight:700;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;
+  background:var(--vinho);padding:4px 7px;border-radius:3px;vertical-align:2px}
+.torre__preco{font-family:var(--display);font-weight:800;font-size:var(--t-30);line-height:1;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+
+/* dia e horário */
+.dias__cab{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.dias__mes{font-stretch:125%;font-weight:700;font-size:.8125rem;letter-spacing:.14em;text-transform:uppercase;color:#E8DCD5}
+.dias__setas{display:flex;gap:8px}
+.seta{width:40px;height:40px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;background:var(--asfalto-2);color:var(--osso);
+  box-shadow:inset 0 0 0 1px var(--linha);transition:box-shadow .2s, transform .2s}
+.seta:hover{box-shadow:inset 0 0 0 1px var(--osso);transform:scale(1.06)}
+.seta svg{width:16px;height:16px}
+@media (hover:none){.dias__setas{display:none}}
+.dias{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.dias::-webkit-scrollbar{display:none}
+.dia{flex:none;scroll-snap-align:start}
+.dia .opcao__caixa{width:80px;align-items:center;padding:14px 8px;gap:2px;text-align:center}
+.dia__semana{font-stretch:100%;font-weight:700;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--suave);white-space:nowrap}
+.dia__num{font-family:var(--display);font-weight:900;font-size:2.25rem;line-height:1}
+.dia__mes{font-size:.8125rem;color:#CBBDB6}
+.dia.fechado{cursor:not-allowed}
+.dia.fechado .opcao__caixa{opacity:.38}
+.periodos{display:grid;gap:20px;margin-top:22px}
+.periodo h4{display:flex;align-items:center;gap:12px;margin-bottom:10px;font-stretch:125%;font-weight:700;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--suave)}
+.periodo h4::after{content:"";flex:1;height:1px;background:var(--linha)}
+.horarios{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:10px}
+.horario .opcao__caixa{align-items:center;padding:14px 6px;font-family:var(--display);font-weight:800;font-size:1.375rem;line-height:1;font-variant-numeric:tabular-nums}
+.horario.carregando .opcao__caixa{color:transparent;background:linear-gradient(90deg,#241210 0%,#3d201c 50%,#241210 100%);background-size:200% 100%;animation:brilho 1.1s linear infinite}
+@keyframes brilho{to{background-position:-200% 0}}
+.fx-reduzido .horario.carregando .opcao__caixa{animation:none}
+
+/* entrar (login) */
+.entrar{display:grid;gap:18px}
+.entrar > div{display:grid;gap:18px}
+.entrar[data-estado="fora"] .entrar__codigo,.entrar[data-estado="fora"] .entrar__dentro,
+.entrar[data-estado="codigo"] .entrar__fora,.entrar[data-estado="codigo"] .entrar__dentro,
+.entrar[data-estado="dentro"] .entrar__fora,.entrar[data-estado="dentro"] .entrar__codigo{display:none}
+.entrar__intro{color:#D9CCC5;font-size:var(--t-15);max-width:54ch;line-height:1.55}
+.entrar__intro strong{color:var(--osso)}
+.entrar__google{min-height:44px;display:flex;align-items:center}
+.entrar__google:empty{display:none}
+.entrar__ou{display:flex;align-items:center;gap:12px;color:var(--suave);font-stretch:125%;font-weight:700;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase}
+.entrar__ou::before,.entrar__ou::after{content:"";flex:1;height:1px;background:var(--linha)}
+.entrar__linha{display:flex;gap:12px 14px;align-items:flex-end;flex-wrap:wrap}
+.entrar__linha .campo{flex:1;min-width:220px}
+.entrar__nota{font-size:.8125rem;color:var(--suave)}
+.botao--mini{font-size:var(--t-15);padding:15px 22px 15px 38px}
+.otp{display:flex;gap:8px}
+.otp input{width:50px;height:60px;text-align:center;font-family:var(--display);font-weight:900;font-size:1.875rem;border-radius:6px;border:0;
+  background:var(--asfalto-2);box-shadow:inset 0 0 0 1px var(--linha);color:var(--osso);caret-color:var(--osso);transition:box-shadow .2s, transform .2s}
+.otp input:focus{outline:none;box-shadow:inset 0 0 0 2px var(--osso);transform:translateY(-2px)}
+.otp.tremer{animation:tremer .4s}
+@keyframes tremer{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.link-botao{background:none;border:0;color:#E8DCD5;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer;font-size:var(--t-15);padding:6px 0}
+.link-botao[disabled]{opacity:.45;cursor:default}
+.conectado{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:8px;background:rgba(242,236,228,.05);box-shadow:inset 0 0 0 1px var(--linha)}
+.conectado__avatar{flex:none;width:42px;height:42px;border-radius:50%;background:var(--vinho);display:grid;place-items:center;font-family:var(--display);font-weight:900;font-size:1.375rem;text-transform:uppercase}
+.conectado__txt{flex:1;min-width:0;font-size:var(--t-15);line-height:1.35}
+.conectado__txt strong{display:block}
+.conectado__txt span{display:block;color:var(--suave);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.campos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.campo{display:grid;gap:8px}
+.campo span{font-stretch:125%;font-weight:700;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--suave)}
+.campo input{width:100%;padding:16px 18px;border-radius:6px;border:0;background:var(--asfalto-2);box-shadow:inset 0 0 0 1px var(--linha);font-size:var(--t-18)}
+.campo input:focus{outline:none;box-shadow:inset 0 0 0 2px var(--osso)}
+/* aviso do dono no topo do site e recado de barbearia fechada */
+.aviso-site{position:relative;z-index:60;padding:12px var(--margem);padding-right:84px;background:var(--vinho);color:var(--osso);font-weight:700;font-size:var(--t-15);text-align:center;line-height:1.4}
+.aviso-site[hidden],.fechada[hidden]{display:none}
+.fechada{max-width:1400px;margin:0 auto var(--e-4);padding:18px 22px;border-radius:12px;background:rgba(116,2,0,.35);box-shadow:inset 0 0 0 1px #5d3a35;font-size:var(--t-18);line-height:1.5}
+.fechada a{font-weight:800}
+
+/* cupom do Clube no passo 05 */
+.cupons-reserva{display:grid;gap:8px;margin-top:18px}
+.cupons-reserva h4{font-stretch:125%;font-weight:700;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--suave)}
+.cupom-r{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:10px;cursor:pointer;
+  background:linear-gradient(135deg,#1f7a45,#2E9E5B);color:#fff}
+.cupom-r input{width:22px;height:22px;accent-color:#fff;flex:none}
+.cupom-r strong{display:block;font-weight:800}
+.cupom-r small{display:block;font-size:.8125rem;opacity:.9}
+.cupom-r--off{background:var(--asfalto-2);color:var(--suave);cursor:default;box-shadow:inset 0 0 0 1px var(--linha)}
+.meus{display:grid;gap:8px}
+.meus h4{font-stretch:125%;font-weight:700;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--suave)}
+.meu{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-radius:6px;background:var(--asfalto-2);font-size:var(--t-15)}
+.meu strong{display:block}
+.meu span{color:var(--suave);font-size:.8125rem}
+.isca{position:absolute;left:-9999px}
+
+/* resumo */
+.reserva__resumo{min-width:0;grid-column:9 / span 4;position:sticky;top:84px;background:var(--osso);color:var(--tinta);border-radius:8px;padding:var(--e-4) var(--e-3) var(--e-3);
+  box-shadow:0 30px 60px -30px rgba(0,0,0,.7)}
+.reserva__resumo h3{font-family:var(--display);font-weight:900;font-size:var(--t-44);text-transform:uppercase;line-height:.9;margin-bottom:var(--e-3)}
+.progresso__txt{font-stretch:125%;font-weight:700;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:#7a6a64;margin-bottom:8px}
+.progresso{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:var(--e-3)}
+.progresso i{height:4px;border-radius:2px;background:rgba(22,11,10,.12);transition:background .35s}
+.progresso i.feito{background:var(--vinho)}
+.progresso i.atual{background:#c99f99}
+.resumo{display:grid;gap:0;margin-bottom:var(--e-3)}
+.resumo div{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid rgba(22,11,10,.12);font-size:var(--t-15)}
+.resumo dt{font-stretch:125%;font-weight:700;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:#7a6a64;padding-top:2px}
+.resumo dd{font-weight:600}
+.resumo dd.vazio{color:#a39690;font-weight:400}
+.resumo__total{display:flex;justify-content:space-between;align-items:baseline;margin:var(--e-2) 0 var(--e-3)}
+.resumo__total span{font-stretch:125%;font-weight:700;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase}
+.resumo__total strong{font-family:var(--display);font-weight:900;font-size:2.75rem;line-height:1;color:var(--vinho);font-variant-numeric:tabular-nums}
+.reserva__aviso{margin-top:var(--e-2);font-size:var(--t-15);min-height:1.5em}
+.reserva__aviso.erro{color:var(--vinho);font-weight:600}
+.botao[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+.confirmado{display:none}
+.reserva.feito .confirmado{display:block}
+.reserva.feito .reserva__formulario{display:none}
+.reserva.feito .reserva__passos{display:none}
+.reserva.feito .reserva__resumo{grid-column:1 / -1;max-width:560px;margin:0 auto;position:static}
+.confirmado h3{color:var(--vinho)}
+.confirmado p{margin-bottom:var(--e-3)}
+.confirmado__links{display:grid;gap:12px}
+.confirmado__nota{margin-top:var(--e-3);font-size:.875rem;color:#6d5e58}
+.link-botao.escuro{color:var(--tinta)}
+.selo-ok{width:76px;height:76px;margin-bottom:18px;display:block}
+.selo-ok circle,.selo-ok path{fill:none;stroke:var(--vinho);stroke-linecap:round;stroke-linejoin:round}
+.selo-ok circle{stroke-width:3;stroke-dasharray:214;stroke-dashoffset:214}
+.selo-ok path{stroke-width:4.5;stroke-dasharray:60;stroke-dashoffset:60}
+.reserva.feito .selo-ok circle{animation:traco .7s .1s cubic-bezier(.65,0,.35,1) forwards}
+.reserva.feito .selo-ok path{animation:traco .45s .7s cubic-bezier(.65,0,.35,1) forwards}
+@keyframes traco{to{stroke-dashoffset:0}}
+.fx-reduzido .selo-ok circle,.fx-reduzido .selo-ok path{animation:none!important;stroke-dashoffset:0}
+
+/* barra fixa do celular: cartão flutuante SEMPRE acima da barra do navegador.
+   --nav-inferior = parte da tela que o Safari/Chrome cobre embaixo (calculada no JS pelo visualViewport)
+   + env(safe-area-inset-bottom) = área do gesto do iPhone. Sem backdrop-filter (pesado ao rolar). */
+:root{--nav-inferior:0px}
+.barra{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom) + var(--nav-inferior));z-index:70;display:none;align-items:center;gap:12px;
+  padding:12px 12px 12px 18px;border-radius:16px;background:#1f0c0a;box-shadow:inset 0 0 0 1px var(--linha),0 18px 40px -12px rgba(0,0,0,.8);
+  transform:translate3d(0,calc(100% + 40px + env(safe-area-inset-bottom)),0);transition:transform .35s cubic-bezier(.22,1,.36,1);will-change:transform}
+.barra.visivel{transform:translate3d(0,0,0)}
+.teclado-aberto .barra{transform:translate3d(0,calc(100% + 40px),0)}   /* com o teclado aberto, a barra sai do caminho */
+/* barra limpa: só o total e um atalho discreto (o passo já aparece no cartão "Seu horário") */
+.barra__info{flex:1;min-width:0;display:flex;align-items:baseline;gap:8px;white-space:nowrap}
+.barra__rotulo{font-stretch:125%;font-weight:700;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--suave)}
+.barra__total{font-family:var(--display);font-weight:900;font-size:1.75rem;line-height:1;font-variant-numeric:tabular-nums}
+.barra__botao{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:0;cursor:pointer;
+  background:transparent;color:var(--osso);font-weight:700;font-size:var(--t-15);box-shadow:inset 0 0 0 1.5px rgba(242,236,228,.55);
+  transition:background .2s, color .2s, box-shadow .2s}
+.barra__botao:hover,.barra__botao:active{background:var(--osso);color:var(--vinho);box-shadow:none}
+.barra__botao svg{width:16px;height:16px}
+.barra__botao[hidden]{display:none}
+.barra__botao[disabled]{opacity:.5}
+
+/* ---------- painel do plano (vantagens + contratar) ---------- */
+.painel{border:0;padding:0;margin:auto;max-width:none;max-height:none;width:min(680px,94vw);height:fit-content;background:transparent;color:var(--osso);overflow:visible}
+.painel[open]{animation:painel-entra .32s cubic-bezier(.22,1,.36,1)}
+.painel::backdrop{background:rgba(8,2,2,.78);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+@keyframes painel-entra{from{opacity:0;transform:translateY(28px) scale(.98)}}
+.painel__caixa{position:relative;max-height:88vh;max-height:88dvh;overflow-y:auto;overscroll-behavior:contain;border-radius:18px;padding:44px 36px 34px;
+  background:radial-gradient(120% 60% at 100% 0%,rgba(116,2,0,.55) 0%,transparent 60%),var(--asfalto);box-shadow:inset 0 0 0 1px var(--linha),0 50px 100px -30px rgba(0,0,0,.9);
+  scrollbar-width:thin;scrollbar-color:#4a2d29 transparent}
+.painel__fechar{position:sticky;top:0;float:right;margin:-26px -18px 0 0;z-index:2;width:44px;height:44px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
+  background:rgba(242,236,228,.08);color:var(--osso);transition:background .2s, transform .3s}
+.painel__fechar:hover{background:rgba(242,236,228,.16);transform:rotate(90deg)}
+.painel__fechar svg{width:20px;height:20px}
+.painel__tela{display:grid;gap:0}
+.painel__tela[hidden]{display:none}
+.painel__rotulo{color:var(--suave);margin-bottom:12px;padding-right:56px}
+.painel__tela > .painel__titulo{padding-right:48px}
+.painel__titulo{font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:clamp(2.4rem,7vw,3.6rem);line-height:.95;margin-bottom:12px}
+.painel__preco{font-family:var(--display);font-weight:900;font-size:2.4rem;line-height:1;margin-bottom:26px;font-variant-numeric:tabular-nums}
+.painel__preco small{font-family:var(--texto);font-weight:500;font-size:var(--t-15);color:var(--suave)}
+.painel__texto{color:#D9CCC5;font-size:var(--t-15);line-height:1.6;margin-bottom:22px;max-width:54ch}
+.painel__erro{color:#FFA394;font-weight:600;font-size:var(--t-15);margin-top:14px}
+.painel__erro:empty{display:none}
+.painel__cta{margin-top:26px;justify-self:start}
+.painel__voltar{justify-self:start;display:inline-flex;align-items:center;gap:8px;border:0;background:none;cursor:pointer;color:var(--suave);font-weight:700;font-size:var(--t-15);
+  padding:4px 0;margin-bottom:18px}
+.painel__voltar:hover{color:var(--osso)}
+.painel__voltar svg{width:18px;height:18px}
+.painel .entrar{margin-top:4px}
+.painel-aberto body{overflow:hidden}
+
+/* acordeão de vantagens */
+.acordeao{display:grid;gap:10px}
+.acord{border-radius:12px;background:var(--asfalto-2);box-shadow:inset 0 0 0 1px var(--linha);overflow:hidden}
+.acord[open]{box-shadow:inset 0 0 0 1px #5d3a35}
+.acord summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px}
+.acord summary::-webkit-details-marker{display:none}
+.acord__titulo{flex:1;min-width:0}
+.acord__titulo strong{display:block;font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:1.5rem;line-height:1}
+.acord__titulo span{display:block;margin-top:4px;color:var(--suave);font-size:var(--t-13)}
+.acord__seta{width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;background:rgba(242,236,228,.06);transition:transform .35s cubic-bezier(.22,1,.36,1)}
+.acord__seta svg{width:14px;height:14px}
+.acord[open] .acord__seta{transform:rotate(180deg)}
+.acord__corpo{padding:0 20px 16px}
+.off{display:inline-flex;align-items:center;padding:4px 9px;border-radius:5px;font-stretch:112%;font-weight:800;font-size:var(--t-13);letter-spacing:.02em;
+  background:var(--vinho);color:var(--osso);white-space:nowrap}
+.dias-tag{display:inline-flex;justify-content:center;padding:4px 9px;border-radius:5px;font-stretch:112%;font-weight:800;font-size:var(--t-13);white-space:nowrap;
+  background:rgba(159,216,176,.14);color:#9FD8B0}
+.incluso{display:grid;grid-template-columns:auto 1fr;gap:12px 14px;align-items:center;padding:14px 0;border-top:1px solid var(--linha)}
+.incluso:first-child{border-top:0;padding-top:4px}
+.incluso__nome{grid-column:1 / -1;font-weight:800;font-size:var(--t-18)}
+.incluso > .off,.incluso > .dias-tag{justify-self:stretch;justify-content:center}
+/* "De R$ 35,00   Por R$ 0,00" na mesma linha */
+.incluso__preco{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px}
+.incluso__de{color:var(--suave);font-size:1rem;white-space:nowrap}
+.incluso__de s{opacity:.85}
+.incluso__por{font-family:var(--display);font-weight:900;font-size:1.6rem;line-height:1;white-space:nowrap}
+.incluso__nota{font-weight:700}
+.incluso__nota small{display:block;font-weight:400;color:var(--suave);font-size:var(--t-13)}
+.precos{list-style:none}
+.precos li{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:11px 0;border-top:1px solid var(--linha);font-size:var(--t-15)}
+.precos li:first-child{border-top:0}
+/* preço antigo riscado primeiro (menor), preço com desconto à direita (maior) */
+.precos__valor{display:flex;align-items:baseline;gap:10px;flex:none}
+.precos b{font-family:var(--display);font-weight:800;font-size:1.375rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.precos s{color:var(--suave);font-size:var(--t-13);white-space:nowrap}
+.beneficio strong{display:block;font-weight:800;font-size:var(--t-18)}
+.beneficio span{display:block;color:#9FD8B0;font-weight:600;margin-top:4px}
+.selo-ok--claro circle,.selo-ok--claro path{stroke:var(--osso)}
+.painel[open] .selo-ok circle{animation:traco .7s .1s cubic-bezier(.65,0,.35,1) forwards}
+.painel[open] .selo-ok path{animation:traco .45s .7s cubic-bezier(.65,0,.35,1) forwards}
+@media (max-width:700px){
+  .painel{width:100%;max-width:100%;margin:auto 0 0}
+  .painel[open]{animation:painel-sobe .32s cubic-bezier(.22,1,.36,1)}
+  @keyframes painel-sobe{from{transform:translateY(100%)}}
+  .painel__caixa{border-radius:20px 20px 0 0;max-height:92dvh;padding:40px 18px calc(26px + env(safe-area-inset-bottom))}
+  .painel__fechar{margin:-24px -4px 0 0}
+  .acord summary{padding:16px}
+  /* celular: "Dias disponíveis" ganha linha própria, assim o "De … Por …" cabe lado a lado */
+  .incluso{gap:10px 12px}
+  .incluso > .dias-tag{grid-column:1 / -1;justify-self:start}
+  .incluso__nota{grid-column:1 / -1}
+  .incluso > .off{font-size:.75rem;padding:4px 8px}
+  .incluso__preco{gap:4px 8px}
+  .incluso__de{font-size:.8125rem}
+  .incluso__por{font-size:1.3rem}
+  .acord__corpo{padding:0 16px 14px}
+  .painel__cta{width:calc(100% - 22px)}
+}
+
+/* cortina: viagem rápida até o agendamento */
+.cortina{position:fixed;inset:0;z-index:88;background:var(--vinho);display:grid;place-items:center;pointer-events:none;clip-path:inset(100% 0 0 0)}
+.cortina span{font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:clamp(3rem,10vw,8rem);line-height:.9;color:var(--osso);opacity:0;transform:translateY(20px);transition:opacity .25s, transform .4s}
+.cortina.entra{clip-path:inset(0 0 0 0);transition:clip-path .26s cubic-bezier(.77,0,.18,1)}
+.cortina.entra span{opacity:1;transform:none;transition-delay:.12s}
+.cortina.sai{clip-path:inset(0 0 100% 0);transition:clip-path .32s cubic-bezier(.77,0,.18,1)}
+
+/* janela de cancelamento (link do e-mail) */
+.dialogo{border:0;border-radius:10px;padding:34px 30px 28px;max-width:440px;width:calc(100% - 40px);background:var(--osso);color:var(--tinta);
+  box-shadow:0 40px 90px -20px rgba(0,0,0,.85)}
+.dialogo::backdrop{background:rgba(10,3,3,.72);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.dialogo h3{font-family:var(--display);font-weight:900;font-size:2.5rem;text-transform:uppercase;line-height:.92;margin-bottom:12px;color:var(--vinho)}
+.dialogo p{margin-bottom:22px}
+.dialogo__acoes{display:grid;gap:12px}
+
+.rodape{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--e-4);flex-wrap:wrap;
+  padding:var(--e-5) var(--margem) var(--e-5);max-width:calc(1400px + 2 * var(--margem));margin:0 auto;border-top:1px solid var(--linha);color:var(--suave);font-size:var(--t-15)}
+.rodape__marca{display:flex;align-items:center;gap:var(--e-3);color:var(--osso)}
+.rodape__marca img{width:110px}
+.rodape__marca strong{font-family:var(--display);font-weight:900;font-size:var(--t-44);text-transform:uppercase;line-height:.9;display:block;margin-bottom:6px}
+.rodape__links{display:flex;flex-wrap:wrap;gap:var(--e-2) var(--e-4);color:var(--osso)}
+
+/* ============ celular ============ */
+@media (max-width: 900px){
+  .menu-botao{width:50px;height:50px}
+  .agendar__topo h2{font-size:clamp(2.6rem,13.5vw,4rem)}    /* "AGENDAMENTO" cabe na largura do celular */
+  .barra{display:flex}
+  .barra-ativa .agendar{padding-bottom:calc(var(--e-6) + 96px + env(safe-area-inset-bottom))}
+  .poste{transition:transform .6s cubic-bezier(.22,1,.36,1), opacity .4s, bottom .45s cubic-bezier(.22,1,.36,1)}
+  .barra-ativa .poste{bottom:calc(86px + env(safe-area-inset-bottom) + var(--nav-inferior))}   /* o poste sobe e fica acima da barra */
+  .barra-ativa .poste__fala{display:none}
+  .passo__cab{padding:18px 14px 18px 16px;gap:10px}
+  .passo__ok{width:18px;height:18px;margin-left:-2px}
+  .passo__seta{margin-left:-2px}
+  .passo__dentro{padding:2px 16px 22px}
+  .passo__escolha{flex:1 1 0;font-size:.8125rem}
+  .passo__titulo{flex:none}
+  .passo__alterar{display:none!important}
+  .barbeiros{gap:8px}
+  .barbeiro__nome{font-size:1.15rem}
+  .barbeiro__info{left:9px;right:8px;bottom:9px}
+  .barbeiro__horas{font-size:.75rem;letter-spacing:-.01em}
+  .barbeiro__r10{font-size:2.5rem}
+  .otp{gap:6px}
+  .otp input{width:44px;height:54px;font-size:1.625rem}
+  .entrar__linha .campo{min-width:100%}
+  .menu__lista span{font-size:var(--t-15)}
+  .largada__texto{right:var(--margem);bottom:calc(24px + env(safe-area-inset-bottom))}
+  .largada__texto h1{font-size:clamp(2.5rem,12vw,3.5rem)}
+  .largada__acoes .botao{padding:17px 22px 17px 40px}
+  .largada__letras{translate:0 -10%}
+
+  .recorde__topo{right:var(--margem);width:auto;top:84px}
+  .recorde__topo h2{font-size:var(--t-22)}
+  .recorde__base{right:var(--margem);width:auto;bottom:calc(20px + env(safe-area-inset-bottom))}
+  .contador__num{font-size:clamp(88px,15svh,130px)}
+  .voltas{max-width:none;margin-top:var(--e-2)}
+  .voltas i{height:10px}
+  .recorde__foto{right:50%;translate:50% -46%;height:min(46svh,420px)}
+
+  .clube__grade,.reserva{grid-template-columns:1fr;gap:var(--e-4)}
+  .clube__intro,.clube__planos,.reserva__passos,.reserva__resumo{grid-column:1}
+  .clube__intro{position:static}
+  .clube__planos{padding-top:0}
+  .passe{padding:var(--e-5) var(--e-3) var(--e-3)}
+
+  .familia__foto{left:50%;top:76px;translate:-50% 0;width:auto;height:min(38svh,calc(100vw * 1.15 - 40px))}
+  .familia__texto{top:auto;bottom:calc(28px + env(safe-area-inset-bottom));translate:none;left:var(--margem);right:var(--margem);width:auto;text-align:left;align-items:flex-start}
+  .familia__texto h2{margin-bottom:var(--e-3);font-size:clamp(2rem,9vw,2.75rem);max-width:none}
+
+  .opcoes--2,.opcoes--3{grid-template-columns:1fr}
+  .campos{grid-template-columns:1fr}
+  .reserva__resumo{position:static}
+  .torre__linha{grid-template-columns:4px 24px 1fr auto;gap:12px;padding-right:var(--e-2)}
+  .torre__nome{font-size:var(--t-15)}
+  .torre__preco{font-size:var(--t-22)}
+  .poste__fala{padding:9px 11px}
+  .poste__ritmo{display:none}
+  .poste__corpo{height:96px;width:26px}
+  .poste__tubo{width:18px}
+  .poste__tampa{width:26px}
+}
+
+/* ============ movimento reduzido: tudo legível, parado ============ */
+.fx-reduzido .largada__palco,.fx-reduzido .recorde__palco,.fx-reduzido .familia__palco{position:relative;height:100vh;height:100dvh;overflow:hidden}
+.fx-reduzido .largada__letras,.fx-reduzido .luzes{display:none}
+.fx-reduzido .recorde__fios{display:none}
+.fx-reduzido .recorde__foto{opacity:1;clip-path:none}
+</style>
+<link rel="stylesheet" href="assets/css/conta.css">
+</head>
+<body>
+
+<button class="menu-botao" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu">
+  <span class="menu-botao__barras" aria-hidden="true"><i></i><i></i><i></i></span>
+</button>
+<nav class="menu" id="menu" aria-label="Menu" aria-hidden="true">
+  <div class="menu__grade">
+    <div class="menu__site">
+      <p class="rotulo menu__rotulo">R10 Barbearia</p>
+      <ul class="menu__lista">
+        <li><a href="#agendar"><strong>Agendar</strong><span>Agendamento simples e rápido</span></a></li>
+        <li><a href="#recorde"><strong>Recorde</strong><span>63 atendimentos em um único dia</span></a></li>
+        <li><a href="#clube"><strong>Planos</strong><span>Plano Corte Ilimitado e Cabelo e barba ilimitado</span></a></li>
+      </ul>
+    </div>
+    <div class="menu__conta">
+      <p class="rotulo menu__rotulo">Sua conta</p>
+      <a class="botao menu__entrar" href="#conta">Entrar / Minha conta
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2.2"/></svg></a>
+      <ul class="menu__atalhos">
+        <li><a href="#conta/agendamentos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+          <span>Meus agendamentos</span></a></li>
+        <li><a href="#conta/clube">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="9" cy="12" r="2.2"/><path d="M14 11h4M14 14h3"/></svg>
+          <span>Clube do assinante</span></a></li>
+        <li><a href="#conta/plano">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12 3 8 4-8 4-8-4 8-4z"/><path d="m4 12 8 4 8-4M4 17l8 4 8-4"/></svg>
+          <span>Meu plano</span></a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="menu__rodape">
+    <a class="link-seco" href="https://wa.me/5543999850351">WhatsApp (43) 99985-0351</a>
+    <a class="link-seco" href="https://www.instagram.com/r10._barbearia/">Instagram @r10._barbearia</a>
+  </div>
+</nav>
+
+<!-- assinatura B: o poste gira na velocidade da rolagem -->
+<a class="poste" href="#agendar" data-ritmo="parado" aria-label="Agendar horário">
+  <span class="poste__fala" aria-hidden="true">
+    <span class="poste__acao">Agendar</span>
+    <span class="poste__ritmo">No box</span>
+  </span>
+  <span class="poste__corpo" aria-hidden="true">
+    <span class="poste__tampa"></span>
+    <span class="poste__tubo"><span class="poste__listras"></span></span>
+    <span class="poste__tampa poste__tampa--base"></span>
+  </span>
+</a>
+
+<main id="topo">
+
+  <!-- 1. LARGADA -->
+  <!-- aviso/banner promocional (o dono liga e escreve no /gestor → Configurações) -->
+  <div class="aviso-site" id="aviso-site" role="status" hidden><span></span></div>
+  <section class="largada" data-fx-fixa data-fx-altura="1.5" data-fx-fundo="#170807" data-fx-tinta="#F2ECE4">
+    <div class="fx-palco largada__palco">
+      <div class="luzes" aria-hidden="true" data-fx-y="0,-140" data-fx-opacidade="1,0" data-fx-faixa="0,0.3">
+        <div class="luzes__trilho">
+          <span class="luz"><i></i><i></i></span>
+          <span class="luz"><i></i><i></i></span>
+          <span class="luz"><i></i><i></i></span>
+          <span class="luz"><i></i><i></i></span>
+          <span class="luz"><i></i><i></i></span>
+        </div>
+      </div>
+
+      <figure class="largada__janela">
+        <img src="assets/foto-placa-dia.jpg" alt="Placa da R10 Barbearia na rua, num fim de tarde de céu azul" width="512" height="590">
+      </figure>
+
+      <div class="largada__letras" aria-hidden="true">
+        <span class="l-r" data-fx-x="0,-1100" data-fx-faixa="0.04,0.75"><b>R</b></span>
+        <span class="l-10" data-fx-x="0,1100" data-fx-faixa="0.04,0.75"><b>10</b></span>
+      </div>
+
+      <div class="largada__texto">
+        <p class="rotulo">Barbearia · Cidade Alta · Fluviopolis</p>
+        <h1>R10 <span>Barbearia</span></h1>
+        <div class="largada__acoes">
+          <a class="botao" href="#agendar">Agendar horário
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2.2"/></svg></a>
+          <a class="botao botao--linha" href="#clube">Clube do assinante</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. O RECORDE — PICO (assinatura A: o cabelo escreve o 63) -->
+  <section id="recorde" class="recorde" data-fx-fixa data-fx-altura="3.6" data-fx-fundo="#E6E1DA" data-fx-tinta="#160B0A">
+    <div class="fx-palco recorde__palco">
+      <figure class="recorde__foto">
+        <img src="assets/foto-recorde.jpg" alt="Dois barbeiros da R10 deitados no chão da barbearia, exaustos, ao lado de “63 ATEND” escrito com cabelo no piso" width="433" height="581" loading="lazy">
+      </figure>
+      <canvas class="recorde__fios" aria-hidden="true"></canvas>
+
+      <div class="recorde__topo">
+        <p class="rotulo">Recorde da casa</p>
+        <h2 data-fx="palavras" data-fx-duracao="420">Somos a barbearia com maior quantidade de recordes de atendimentos em um único dia</h2>
+      </div>
+
+      <div class="recorde__base">
+        <div class="contador">
+          <span class="contador__num" aria-hidden="true"></span>
+          <span class="contador__rotulo">Atendimentos em um único dia</span>
+          <span class="sr">63 atendimentos em um único dia</span>
+        </div>
+        <div class="voltas" aria-hidden="true"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. CLUBE — respiro -->
+  <section id="clube" class="clube" data-fx-fundo="#740200" data-fx-tinta="#F2ECE4">
+    <div class="clube__grade">
+      <div class="clube__intro">
+        <p class="rotulo" data-fx="surgir">Clube do assinante</p>
+        <h2 data-fx="subir">Fazemos parte das primeiras barbearias com assinatura</h2>
+        <p data-fx="subir" data-fx-atraso="150">Conheça o Clube do assinante e pegue seu cupom com vantagens.</p>
+      </div>
+
+      <div class="clube__planos" data-fx-paralaxe="0.06">
+        <article class="passe" data-fx="subir">
+          <h3>Plano Corte Ilimitado</h3>
+          <p class="preco" aria-label="R$ 95,00 por mês"><span class="preco__moeda">R$</span><span class="preco__valor">95</span><span class="preco__cent">,00</span></p>
+          <p class="passe__mes">Por mês</p>
+          <button type="button" class="passe__vantagens" data-plano="corte-ilimitado">Confira as vantagens
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2.2"/></svg></button>
+          <button type="button" class="botao botao--cheio" data-plano="corte-ilimitado">Contrate um plano
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2.2"/></svg></button>
+        </article>
+        <article class="passe" data-fx="subir" data-fx-atraso="120">
+          <h3>Cabelo e barba ilimitado</h3>
+          <p class="preco" aria-label="R$ 130,00 por mês"><span class="preco__moeda">R$</span><span class="preco__valor">130</span><span class="preco__cent">,00</span></p>
+          <p class="passe__mes">Por mês</p>
+          <button type="button" class="passe__vantagens" data-plano="cabelo-barba-ilimitado">Confira as vantagens
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2.2"/></svg></button>
+          <button type="button" class="botao botao--cheio" data-plano="cabelo-barba-ilimitado">Contrate um plano
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2.2"/></svg></button>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. AGENDAR — reserva em etapas; o login só aparece na confirmação -->
+  <section id="agendar" class="agendar" data-fx-fundo="#170807" data-fx-tinta="#F2ECE4">
+    <div class="agendar__topo">
+      <p class="rotulo">Agendar</p>
+      <h2 data-fx="palavras" data-fx-duracao="300">Agendamento simples e rápido</h2>
+      <p data-fx="surgir">Agende seu horário conosco de forma simples e tenha acesso a planos com benefícios exclusivos.</p>
+    </div>
+
+    <p class="fechada" id="fechada" role="status" hidden><strong>A barbearia está fechada no momento.</strong> Os horários voltam a aparecer assim que abrir. Dúvidas? Chame no <a href="https://wa.me/5543999850351" target="_blank" rel="noopener">WhatsApp</a>.</p>
+    <form class="reserva" id="reserva" novalidate>
+      <div class="reserva__passos">
+
+        <section class="passo" data-passo="1" data-estado="aberto">
+          <button type="button" class="passo__cab" aria-expanded="true"><span class="passo__num">01</span><span class="passo__titulo">Unidade</span><span class="passo__escolha"></span><span class="passo__alterar">Alterar</span></button>
+          <div class="passo__corpo"><div><div class="passo__dentro">
+            <div class="opcoes opcoes--2" role="radiogroup" aria-label="Unidade">
+              <label class="opcao">
+                <input type="radio" name="unidade" value="cidade-alta">
+                <span class="opcao__caixa">
+                  <span class="opcao__titulo">Cidade Alta</span>
+                  <span class="opcao__sub">Rua Prefeito Aldo Sampaio Ribas, 355 — Cidade Alta, Jaguariaíva — PR</span>
+                  <span class="opcao__sub"><a class="link-seco" href="https://www.google.com/maps/search/?api=1&amp;query=R10+Barbearia+Rua+Prefeito+Aldo+Sampaio+Ribas+355+Cidade+Alta+Jaguaria%C3%ADva+PR" target="_blank" rel="noopener">Ver no mapa</a></span>
+                </span>
+              </label>
+              <label class="opcao">
+                <input type="radio" name="unidade" value="fluviopolis">
+                <span class="opcao__caixa">
+                  <span class="opcao__titulo">Fluviopolis</span>
+                  <span class="opcao__sub">Rua Domingos Scolario, Sala 2</span>
+                </span>
+              </label>
+            </div>
+            <p class="passo__erro" role="alert"></p>
+          </div></div></div>
+        </section>
+
+        <section class="passo" data-passo="2" data-estado="fechado">
+          <button type="button" class="passo__cab" aria-expanded="false"><span class="passo__num">02</span><span class="passo__titulo">Barbeiro</span><span class="passo__escolha"></span><span class="passo__alterar">Alterar</span></button>
+          <div class="passo__corpo"><div><div class="passo__dentro">
+            <div class="barbeiros" id="lista-barbeiros" role="radiogroup" aria-label="Barbeiro"></div>
+            <p class="passo__erro" role="alert"></p>
+          </div></div></div>
+        </section>
+
+        <section class="passo" data-passo="3" data-estado="fechado">
+          <button type="button" class="passo__cab" aria-expanded="false"><span class="passo__num">03</span><span class="passo__titulo">Serviços</span><span class="passo__escolha"></span><span class="passo__alterar">Alterar</span></button>
+          <div class="passo__corpo"><div><div class="passo__dentro">
+            <div class="torre" role="group" aria-label="Serviços">
+              <div class="torre__cab rotulo"><span>Serviço</span><span>Valor</span></div>
+              <div id="lista-servicos"></div>
+            </div>
+            <div class="passo__acoes">
+              <button type="button" class="botao botao--mini" id="continuar-servicos">Continuar
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2.2"/></svg></button>
+            </div>
+            <p class="passo__erro" role="alert"></p>
+          </div></div></div>
+        </section>
+
+        <section class="passo" data-passo="4" data-estado="fechado">
+          <button type="button" class="passo__cab" aria-expanded="false"><span class="passo__num">04</span><span class="passo__titulo">Dia e horário</span><span class="passo__escolha"></span><span class="passo__alterar">Alterar</span></button>
+          <div class="passo__corpo"><div><div class="passo__dentro">
+            <div class="dias__cab">
+              <span class="dias__mes" id="dias-mes"></span>
+              <span class="dias__setas">
+                <button type="button" class="seta" data-seta="-1" aria-label="Dias anteriores"><svg viewBox="0 0 16 16" fill="none"><path d="M10 3 5 8l5 5" stroke="currentColor" stroke-width="2"/></svg></button>
+                <button type="button" class="seta" data-seta="1" aria-label="Próximos dias"><svg viewBox="0 0 16 16" fill="none"><path d="m6 3 5 5-5 5" stroke="currentColor" stroke-width="2"/></svg></button>
+              </span>
+            </div>
+            <div class="dias" id="lista-dias" role="radiogroup" aria-label="Dia"></div>
+            <div class="periodos" id="lista-horarios"><p class="passo__dica">Escolha o dia para ver os horários livres.</p></div>
+            <p class="passo__erro" role="alert"></p>
+          </div></div></div>
+        </section>
+
+        <section class="passo" data-passo="5" data-estado="fechado">
+          <button type="button" class="passo__cab" aria-expanded="false"><span class="passo__num">05</span><span class="passo__titulo">Confirmar</span><span class="passo__escolha"></span><span class="passo__alterar">Alterar</span></button>
+          <div class="passo__corpo"><div><div class="passo__dentro">
+            <div class="entrar" id="entrar" data-estado="fora"><!-- preenchido por r10BlocoConta --></div>
+            <div class="cupons-reserva" id="cupons-reserva" hidden></div>
+            <input class="isca" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <p class="passo__erro" role="alert"></p>
+          </div></div></div>
+        </section>
+      </div>
+
+      <aside class="reserva__resumo" aria-live="polite">
+        <div class="reserva__formulario">
+          <p class="progresso__txt">Passo <span data-r="passo">1</span> de 5</p>
+          <div class="progresso" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+          <h3>Seu horário</h3>
+          <dl class="resumo">
+            <div><dt>Unidade</dt><dd data-r="unidade" class="vazio">—</dd></div>
+            <div><dt>Barbeiro</dt><dd data-r="barbeiro" class="vazio">—</dd></div>
+            <div><dt>Serviços</dt><dd data-r="servicos" class="vazio">—</dd></div>
+            <div><dt>Dia</dt><dd data-r="dia" class="vazio">—</dd></div>
+            <div><dt>Horário</dt><dd data-r="hora" class="vazio">—</dd></div>
+          </dl>
+          <div class="resumo__total"><span>Total</span><strong data-r="total">R$ 0,00</strong></div>
+          <button class="botao botao--vinho botao--cheio" type="submit" id="confirmar">Confirmar agendamento
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2.2"/></svg></button>
+          <p class="reserva__aviso" id="aviso"></p>
+        </div>
+        <div class="confirmado">
+          <svg class="selo-ok" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="34"/><path d="M23 39l10 10 20-22"/></svg>
+          <h3>Agendado!</h3>
+          <p id="confirmado-texto"></p>
+          <div class="confirmado__links">
+            <a class="botao botao--whats botao--cheio" id="add-whats" href="#" target="_blank" rel="noopener">Enviar comprovante no WhatsApp da Barbearia</a>
+            <a class="botao botao--vinho botao--cheio" id="add-agenda" href="#" target="_blank" rel="noopener">Salvar no Google Agenda</a>
+            <a class="botao botao--linha botao--cheio" id="add-ics" href="#" download="r10-barbearia.ics">Salvar no iPhone ou outro app</a>
+            <button class="link-botao escuro" type="button" id="novo">Fazer outro agendamento</button>
+          </div>
+          <p class="confirmado__nota">Não vai poder ir? Cancele em Sua conta → Agendamentos (até 2 horas antes).</p>
+        </div>
+      </aside>
+    </form>
+  </section>
+
+  <!-- 5. FAMÍLIA — fechamento antes do rodapé -->
+  <section class="familia" data-fx-fixa data-fx-altura="1.6" data-fx-fundo="#170807" data-fx-tinta="#F2ECE4">
+    <div class="fx-palco familia__palco">
+      <figure class="familia__foto">
+        <img src="assets/foto-placa-ceu.jpg" alt="Placa redonda da R10 Barbearia contra um céu de nuvens douradas" width="512" height="590" loading="lazy"
+             data-fx-escala="1.22,1" data-fx-faixa="0,0.9">
+      </figure>
+      <div class="familia__texto">
+        <p class="rotulo" data-fx-opacidade="0,1" data-fx-faixa="0.04,0.2">Família R10</p>
+        <h2 data-fx-y="70,0" data-fx-opacidade="0,1" data-fx-faixa="0.06,0.42">Agora você vai fazer parte dessa família que vem crescendo cada vez mais</h2>
+        <div data-fx-y="40,0" data-fx-opacidade="0,1" data-fx-faixa="0.4,0.62">
+          <a class="botao" href="#agendar">Agendar horário
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2.2"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- barra fixa do agendamento (celular) -->
+<div class="barra" id="barra">
+  <p class="barra__info"><span class="barra__rotulo">Total:</span> <span class="barra__total">R$ 0,00</span></p>
+  <button type="button" class="barra__botao" hidden>Continuar <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2.2"/></svg></button>
+</div>
+
+<!-- cancelamento pelo link do e-mail -->
+<dialog class="dialogo" id="dialogo-cancelar" aria-labelledby="dlg-titulo">
+  <h3 id="dlg-titulo">Cancelar horário?</h3>
+  <p>Seu horário será cancelado e liberado para outra pessoa.</p>
+  <div class="dialogo__acoes">
+    <button type="button" class="botao botao--vinho botao--cheio" data-sim>Sim, cancelar <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2.2"/></svg></button>
+    <button type="button" class="link-botao escuro" data-nao>Manter meu horário</button>
+  </div>
+</dialog>
+
+<!-- planos: vantagens + contratação, tudo dentro do site -->
+<dialog class="painel" id="painel-plano" aria-labelledby="painel-titulo">
+  <div class="painel__caixa">
+    <button type="button" class="painel__fechar" data-fechar aria-label="Fechar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+
+    <section class="painel__tela" data-tela="vantagens">
+      <p class="rotulo painel__rotulo">Clube do assinante</p>
+      <h3 class="painel__titulo" id="painel-titulo" data-p="nome"></h3>
+      <p class="painel__preco"><span data-p="preco"></span> <small>por mês</small></p>
+      <div class="acordeao" data-p="vantagens"></div>
+      <button type="button" class="botao botao--grande painel__cta" data-contratar>Contratar este plano
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2.2"/></svg></button>
+    </section>
+
+    <section class="painel__tela" data-tela="contratar" hidden>
+      <button type="button" class="painel__voltar" data-voltar>
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M17 10H4m5-5-5 5 5 5" stroke="currentColor" stroke-width="2"/></svg>Vantagens</button>
+      <p class="rotulo painel__rotulo">Contratar</p>
+      <h3 class="painel__titulo" data-p="nome"></h3>
+      <p class="painel__preco"><span data-p="preco"></span> <small>por mês</small></p>
+      <p class="painel__texto">Entre na sua conta para confirmar. Depois do pedido, a R10 fala com você pelo WhatsApp para ativar a assinatura e combinar o pagamento.</p>
+      <div class="entrar" data-login-plano></div>
+      <p class="painel__erro" role="alert" data-p="erro"></p>
+      <button type="button" class="botao botao--grande painel__cta" data-confirmar>Confirmar assinatura
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2.2"/></svg></button>
+    </section>
+
+    <section class="painel__tela" data-tela="ok" hidden>
+      <svg class="selo-ok selo-ok--claro" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="34"/><path d="M23 39l10 10 20-22"/></svg>
+      <h3 class="painel__titulo">Pedido enviado!</h3>
+      <p class="painel__texto" data-p="ok"></p>
+      <button type="button" class="botao painel__cta" data-fechar>Fechar</button>
+    </section>
+  </div>
+</dialog>
+
+<!-- cortina da viagem rápida até o agendamento -->
+<div class="cortina" aria-hidden="true"><span>Agendar</span></div>
+
+<!-- área do cliente: painel por cima do site (#conta, #conta/agendamentos, #conta/plano, #conta/clube) -->
+<dialog class="conta" id="painel-conta" aria-labelledby="conta-titulo">
+  <header class="conta__topo">
+    <span class="conta__foto" data-c="foto" aria-hidden="true"></span>
+    <div class="conta__quem">
+      <p class="rotulo conta__rotulo">Sua conta</p>
+      <h2 class="conta__titulo" id="conta-titulo" data-c="titulo">Minha conta</h2>
+    </div>
+    <button type="button" class="conta__fechar" data-conta-fechar aria-label="Fechar">
+      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 4l12 12M16 4 4 16" stroke="currentColor" stroke-width="2.2"/></svg></button>
+  </header>
+  <nav class="conta__abas" role="tablist" aria-label="Sua conta" data-c="abas"></nav>
+  <div class="conta__corpo" data-c="corpo" tabindex="-1"></div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+</dialog>
+<dialog class="dialogo" id="modal"><div id="modal-caixa"></div></dialog>
+
+<footer class="rodape">
+  <div class="rodape__marca">
+    <img src="assets/logo-r10.png" alt="Logo R10 Barbearia" width="110" height="126" loading="lazy">
+    <div><strong>R10 Barbearia</strong>Cidade Alta · Fluviopolis</div>
+  </div>
+  <div class="rodape__links">
+    <a class="link-seco" href="https://wa.me/5543999850351">WhatsApp (43) 99985-0351</a>
+    <a class="link-seco" href="https://www.instagram.com/r10._barbearia/">Instagram @r10._barbearia</a>
+  </div>
+  <p>© 2026 R10barbearia</p>
+</footer>
+
+<script src="sites-incriveis.js" defer></script>
+<script>
+/* ---------- Menu de 3 barrinhas ---------- */
+(function(){
+  var raiz = document.documentElement;
+  var botao = document.querySelector(".menu-botao");
+  var menu = document.getElementById("menu");
+  menu.inert = true;
+  function abrir(sim){
+    raiz.classList.toggle("menu-aberto", sim);
+    botao.setAttribute("aria-expanded", sim ? "true" : "false");
+    botao.setAttribute("aria-label", sim ? "Fechar menu" : "Abrir menu");
+    menu.setAttribute("aria-hidden", sim ? "false" : "true");
+    menu.inert = !sim;
+  }
+  botao.addEventListener("click", function(e){
+    var sim = !raiz.classList.contains("menu-aberto");
+    abrir(sim);
+    // pelo teclado (Enter/Espaço) o foco vai para a 1ª opção; com mouse/toque, nada de caixa de foco
+    if (sim && e.detail === 0) { var p = menu.querySelector("a"); setTimeout(function(){ p.focus({ preventScroll:true }); }, 300); }
+  });
+
+  // as barrinhas trocam de cor conforme o fundo que passa por trás delas
+  var claros = [document.getElementById("recorde")];
+  var tomAtual = "";
+  function conferirTom(){
+    var r = botao.getBoundingClientRect(), y = r.top + r.height/2, tom = "claro";
+    claros.forEach(function(s){ var b = s.getBoundingClientRect(); if (b.top <= y && b.bottom >= y) tom = "escuro"; });
+    if (tom !== tomAtual) { tomAtual = tom; botao.dataset.tom = tom; }
+  }
+  var agendado = false;
+  addEventListener("scroll", function(){ if (!agendado) { agendado = true; requestAnimationFrame(function(){ agendado = false; conferirTom(); }); } }, { passive:true });
+  addEventListener("resize", conferirTom);
+  conferirTom();
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && raiz.classList.contains("menu-aberto")) { abrir(false); botao.focus(); }
+  });
+  menu.querySelectorAll('a[href^="#"]').forEach(function(a){
+    a.addEventListener("click", function(e){
+      // área do cliente: fecha o menu e deixa o link mudar o endereço (o painel abre e o "voltar" fecha)
+      if (/^#conta/.test(a.getAttribute("href"))) { abrir(false); return; }
+      e.preventDefault();
+      var href = a.getAttribute("href"), alvo = document.querySelector(href);
+      abrir(false);
+      if (alvo) requestAnimationFrame(function(){ window.r10Viajar(alvo); });   // salto longo = cortina; curto = rolagem suave
+      history.replaceState(null, "", href);
+    });
+  });
+
+  /* ---------- viagem rápida até o agendamento: cortina vinho em vez de rolar 9 telas ---------- */
+  window.r10Viajar = function(alvo){
+    var el = typeof alvo === "string" ? document.querySelector(alvo) : alvo;
+    if (!el) return;
+    var red = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var dist = Math.abs(el.getBoundingClientRect().top);
+    if (red || dist < innerHeight * 1.5) { el.scrollIntoView({ behavior: red ? "auto" : "smooth", block: "start" }); return; }
+    var c = document.querySelector(".cortina");
+    c.classList.remove("sai"); void c.offsetWidth; c.classList.add("entra");
+    setTimeout(function(){
+      scrollTo({ top: el.getBoundingClientRect().top + scrollY, behavior: "instant" });
+      c.classList.add("sai");
+      setTimeout(function(){ c.style.transition = "none"; c.classList.remove("entra", "sai"); void c.offsetWidth; c.style.transition = ""; }, 360);
+    }, 300);
+  };
+  // qualquer link interno (#agendar, #clube, #recorde…) usa a viagem rápida
+  document.addEventListener("click", function(e){
+    var a = e.target.closest && e.target.closest('a[href^="#"]');
+    if (!a || a.closest(".menu")) return;
+    var href = a.getAttribute("href");
+    if (href.length < 2 || href.indexOf("=") >= 0 || /^#conta/.test(href)) return;
+    var alvo = document.querySelector(href);
+    if (!alvo) return;
+    e.preventDefault(); window.r10Viajar(alvo); history.replaceState(null, "", href);
+  });
+})();
+</script>
+<script>
+/* ===================================================================
+   R10 — comportamento sob medida (o motor não é editado)
+   =================================================================== */
+(function(){
+  "use strict";
+  var reduzido = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var raiz = document.documentElement;
+  // no celular o pico dura 3 telas (o motor lê isto ao iniciar, logo depois deste script)
+  if (innerWidth < 900) document.getElementById("recorde").dataset.fxAltura = "3";
+  // no celular a abertura não fica presa à rolagem: a entrada do R10 roda sozinha, por tempo (mais lisa)
+  var movel = !reduzido && raiz.classList.contains("r10-movel");
+  if (movel) {
+    var secLargada = document.querySelector(".largada");
+    secLargada.removeAttribute("data-fx-fixa");
+    secLargada.removeAttribute("data-fx-altura");
+  }
+  function lim(v,a,b){ return v<a?a:v>b?b:v; }
+  function mix(a,b,t){ return a+(b-a)*t; }
+  function saida3(t){ return 1-Math.pow(1-t,3); }
+  function suave(t){ return t*t*(3-2*t); }
+  function progressoDe(secao){
+    var r = secao.getBoundingClientRect();
+    var percurso = secao.offsetHeight - innerHeight;
+    return percurso > 0 ? lim(-r.top/percurso,0,1) : 0;
+  }
+  function semente(s){ return function(){ s|=0; s=s+0x6D2B79F5|0; var t=Math.imul(s^s>>>15,1|s); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+  /* ---------- 0. Barra do navegador no celular (Safari/Chrome) ----------
+     Mede quanto da parte de baixo da tela está coberta (barra do Safari, teclado) e publica
+     em --nav-inferior; a barra do TOTAL e o poste somam isso ao env(safe-area-inset-bottom). */
+  var vv = window.visualViewport;
+  function navInferior(){
+    if (!vv) return;
+    var coberto = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+    var teclado = coberto > 150;                                   // é o teclado, não a barra do navegador
+    raiz.classList.toggle("teclado-aberto", teclado);
+    raiz.style.setProperty("--nav-inferior", (teclado ? 0 : coberto) + "px");
+  }
+  if (vv) { vv.addEventListener("resize", navInferior, { passive:true }); vv.addEventListener("scroll", navInferior, { passive:true }); navInferior(); }
+
+  /* ---------- 1. Largada: luzes + "R10" ----------
+     Só começa depois que a fonte chegou e a área foi medida: assim as letras não trocam de fonte
+     nem de tamanho no meio da animação (era isso que travava no celular). Anima só opacity e transform. */
+  var luzes = document.querySelectorAll(".luz");
+  var largou = false;
+  var fimDaLargada; var largadaFeita = new Promise(function(r){ fimDaLargada = r; });   // o cabelo espera isto
+  function largar(){
+    if (largou) return; largou = true;
+    if (reduzido || !luzes.length) { raiz.classList.remove("largando"); fimDaLargada(); return; }
+    if (movel) {
+      // celular: tudo por tempo, com transições CSS (rodam na GPU, sem depender do JavaScript a cada quadro)
+      requestAnimationFrame(function(){
+        luzes.forEach(function(l,i){ setTimeout(function(){ l.classList.add("acesa"); }, 80 + i*150); });
+        setTimeout(function(){
+          luzes.forEach(function(l){ l.classList.remove("acesa"); });
+          raiz.classList.add("r10-sobe");                         // "R" e "10" sobem da máscara
+          raiz.classList.remove("largando");
+          setTimeout(function(){
+            raiz.classList.add("r10-abre");                       // as metades abrem e a foto aparece
+            if (RJ) janela.style.transform = transformJanela(RJ.fim);
+          }, 560);
+          setTimeout(function(){ raiz.classList.add("r10-fim"); fimDaLargada(); }, 560 + 820);
+        }, 80 + 5*150 + 160);
+      });
+      return;
+    }
+    requestAnimationFrame(function(){
+      luzes.forEach(function(l,i){ setTimeout(function(){ l.classList.add("acesa"); }, 120 + i*240); });
+      setTimeout(function(){
+        luzes.forEach(function(l){ l.classList.remove("acesa"); });
+        raiz.classList.remove("largando");
+        raiz.classList.add("largou");
+        setTimeout(function(){ raiz.classList.remove("largou"); fimDaLargada(); }, 600);   // tira o will-change depois da entrada
+      }, 120 + 5*240 + 360);
+    });
+  }
+  setTimeout(function(){ fimDaLargada(); }, 4000);   // garantia: nada fica esperando para sempre
+
+  var largada = document.querySelector(".largada");
+  var palcoL = largada.querySelector(".fx-palco");
+  var janela = largada.querySelector(".largada__janela");
+  var textoL = largada.querySelector(".largada__texto");
+  var ASP = 590/512, RJ = null, ultimoPL = -1;
+
+  function medirLargada(){
+    var W = palcoL.clientWidth, H = palcoL.clientHeight;
+    var pr = palcoL.getBoundingClientRect(), tr = textoL.getBoundingClientRect();
+    var tTopo = tr.top - pr.top, tDir = tr.right - pr.left;
+    var marg = tr.left - pr.left;
+    // início: pequena, escondida atrás das letras
+    // faixa livre para o "R10": entre as luzes de largada e o topo do texto — nunca por cima do texto
+    var luzesEl = largada.querySelector(".luzes");
+    var faixaTopo = luzesEl.offsetTop + luzesEl.offsetHeight + 14;
+    var faixaFim = tTopo - 22;
+    var faixa = Math.max(80, faixaFim - faixaTopo);
+    var letras = largada.querySelector(".largada__letras");
+    // a caixa da linha tem 0,8 da fonte (line-height) — cabe inteira na faixa, com folga
+    var fonte = Math.min(faixa / 0.84, W * 0.74, H * 0.58);
+    letras.style.inset = "auto 0 auto 0";
+    letras.style.top = faixaTopo + "px";
+    letras.style.height = faixa + "px";
+    letras.style.fontSize = fonte.toFixed(1) + "px";
+    letras.style.translate = "0 0";
+    // início: a janela pequena, escondida atrás das letras, no meio da mesma faixa
+    var hIni = Math.min(faixa * 0.92, W*0.62*ASP) * 0.8, wIni = hIni/ASP;
+    var ini = { x:(W-wIni)/2, y:faixaTopo + faixa/2 - hIni/2, w:wIni };
+    // fim: ao lado do texto (telas largas) ou acima dele (telas estreitas)
+    var fim, livreLado = W - marg - (tDir + 56), hLado = Math.min(H - 150, livreLado*ASP);
+    if (W >= 900 && hLado >= H*0.5) {
+      var wl = hLado/ASP;
+      fim = { x: W - marg - wl, y: Math.max(92, (H - hLado)/2 + 16), w: wl };
+    } else {
+      var topo = Math.max(92, H*0.11);
+      var hDisp = tTopo - 28 - topo;
+      var w2 = Math.min(Math.max(hDisp, hIni)/ASP, W - 2*marg);
+      fim = { x:(W - w2)/2, y: Math.min(topo, tTopo - 28 - w2*ASP), w: w2 };
+    }
+    RJ = { ini:ini, fim:fim };
+    janela.style.width = fim.w + "px";
+    janela.style.height = (fim.w*ASP) + "px";
+    ultimoPL = -1;
+    // celular: a janela começa pequena (atrás das letras) e vai para o lugar final por transição CSS
+    if (movel) janela.style.transform = transformJanela(raiz.classList.contains("r10-abre") ? RJ.fim : RJ.ini);
+  }
+  function transformJanela(r){
+    return "translate3d(" + r.x.toFixed(1) + "px," + r.y.toFixed(1) + "px,0) scale(" + (r.w/RJ.fim.w).toFixed(4) + ")";
+  }
+  function quadroLargada(){
+    if (!RJ || movel) return;             // no celular a janela não acompanha a rolagem
+    var p = reduzido ? 1 : progressoDe(largada);
+    if (p === ultimoPL) return; ultimoPL = p;
+    var e = saida3(lim((p - 0.02)/0.78, 0, 1));
+    var x = mix(RJ.ini.x, RJ.fim.x, e), y = mix(RJ.ini.y, RJ.fim.y, e), w = mix(RJ.ini.w, RJ.fim.w, e);
+    janela.style.transform = "translate3d(" + x.toFixed(1) + "px," + y.toFixed(1) + "px,0) scale(" + (w/RJ.fim.w).toFixed(4) + ")";
+  }
+  var medida = false;
+  function iniciarLargada(){ if (medida) return; medida = true; medirLargada(); quadroLargada(); largar(); }
+  // fonte pronta (ou, se a rede estiver lenta, no máximo 1,2 s depois) → mede → começa a largada
+  var fonteR10 = document.fonts && document.fonts.load ? document.fonts.load("900 100px 'Big Shoulders Display'") : Promise.resolve();
+  Promise.race([fonteR10, new Promise(function(r){ setTimeout(r, 1200); })]).then(iniciarLargada, iniciarLargada);
+  // só mede de novo quando a LARGURA muda (girar o celular). No iPhone a barra do Safari encolhe/cresce ao rolar
+  // e muda só a altura: medir de novo nessa hora fazia a foto e o texto "tremerem".
+  var esperaL, larguraL = innerWidth;
+  addEventListener("resize", function(){
+    if (movel && innerWidth === larguraL) return;
+    larguraL = innerWidth;
+    clearTimeout(esperaL); esperaL = setTimeout(function(){ medirLargada(); ultimoPL = -1; quadroLargada(); }, 120);
+  });
+
+  /* ---------- 2. Assinatura A: o cabelo escreve o 63 ---------- */
+  var secao = document.getElementById("recorde");
+  var palco = secao.querySelector(".fx-palco");
+  var tela = secao.querySelector(".recorde__fios");
+  var ctx = tela.getContext("2d");
+  var numEl = secao.querySelector(".contador__num");
+  var voltasEl = secao.querySelector(".voltas");
+  var foto = secao.querySelector(".recorde__foto");
+  var TOTAL = 63;
+  for (var v=0; v<TOTAL; v++) voltasEl.appendChild(document.createElement("i"));
+  var voltas = voltasEl.children;
+  var NA_FOTO = { x0:0.367, x1:0.48, y0:0.647, y1:0.699 };
+  var T_INI = 0.03, T_CONTA = 0.60, QUEDA = 0.075, T_CORTE = 0.80, T_FOTO = 0.84;
+  var W=0, H=0, dpr=1, fios=[], ultimoP=-1, ultimoN=-1, pronto=false;
+
+  function caixaFormacao(){
+    return W < 900 ? { x:W*0.07, y:H*0.30, w:W*0.86, h:H*0.38 } : { x:W*0.45, y:H*0.12, w:W*0.47, h:H*0.76 };
+  }
+  function amostrar(caixa){
+    var esc = 0.5, cw = Math.max(4,Math.round(caixa.w*esc)), ch = Math.max(4,Math.round(caixa.h*esc));
+    var off = document.createElement("canvas"); off.width=cw; off.height=ch;
+    var c = off.getContext("2d");
+    var fs = ch*1.15;
+    c.font = "900 "+fs+"px 'Big Shoulders Display'";
+    var m = c.measureText("63");
+    var alt = (m.actualBoundingBoxAscent||fs*0.72) + (m.actualBoundingBoxDescent||0);
+    fs *= Math.min(cw*0.94/m.width, ch*0.94/alt); c.font = "900 "+fs+"px 'Big Shoulders Display'";
+    m = c.measureText("63");
+    var asc = m.actualBoundingBoxAscent||fs*0.72, desc = m.actualBoundingBoxDescent||0;
+    c.textAlign = "center"; c.textBaseline = "alphabetic";
+    c.fillText("63", cw/2, ch/2 + (asc-desc)/2);
+    var d = c.getImageData(0,0,cw,ch).data, pts=[], bx0=cw, bx1=0, by0=ch, by1=0;
+    for (var y=0;y<ch;y++) for (var x=0;x<cw;x++) if (d[(y*cw+x)*4+3] > 150) {
+      pts.push(x,y); if(x<bx0)bx0=x; if(x>bx1)bx1=x; if(y<by0)by0=y; if(y>by1)by1=y;
+    }
+    return { pts:pts, esc:esc, bx0:bx0, bx1:bx1, by0:by0, by1:by1 };
+  }
+  /*
+   * Cabelo de verdade não é traço: é fio afinado (grosso na raiz, ponta fina), curvo,
+   * que cai em TUFOS da máquina/tesoura, junto com um "pó" de fios curtíssimos do degradê.
+   * Cada tufo cai junto (mesma hora, mesmo balanço), girando devagar, e assenta no chão
+   * com uma sombra leve. Tudo é função da rolagem: rolou pra cima, o cabelo sobe de volta.
+   */
+  var PARTES = [];   // fios longos e pó, já com tufo, alvo e sombra
+  function montar(){
+    var r = palco.getBoundingClientRect();
+    var leve = raiz.classList.contains("r10-leve");
+    // modo leve: desenha na resolução normal da tela (não na "retina"): 4x menos pixels para pintar
+    W = r.width; H = r.height; dpr = leve ? 1 : Math.min(devicePixelRatio||1, 2);
+    tela.width = Math.round(W*dpr); tela.height = Math.round(H*dpr);
+    var rnd = semente(63), caixa = caixaFormacao(), am = amostrar(caixa);
+    var fr = foto.getBoundingClientRect(), fx = fr.left - r.left, fy = fr.top - r.top;
+    var cel = W < 900, npts = am.pts.length/2;
+    var bw = Math.max(1, am.bx1-am.bx0), bh = Math.max(1, am.by1-am.by0);
+    var escala = cel ? 0.8 : 1;
+
+    function pontoTexto(){
+      var k = Math.floor(rnd()*npts);
+      return { x: caixa.x + (am.pts[k*2] + rnd())/am.esc, y: caixa.y + (am.pts[k*2+1] + rnd())/am.esc,
+               u: (am.pts[k*2]-am.bx0)/bw, w: (am.pts[k*2+1]-am.by0)/bh, solto:false };
+    }
+    function pontoSolto(){
+      return { x: caixa.x - caixa.w*0.06 + rnd()*caixa.w*1.12, y: caixa.y + caixa.h*(0.2 + rnd()*0.85), u: rnd(), w: rnd(), solto:true };
+    }
+    function gauss(){ return (rnd()+rnd()+rnd()-1.5)/1.5; }  // aproxima normal em [-1,1]
+
+    // cria um tufo: vários fios que caem juntos e assentam próximos, quase paralelos
+    function tufo(tipo, origem, qtd){
+      var base = origem();
+      var atend = Math.floor(rnd()*TOTAL);
+      var t0 = T_INI + (atend/TOTAL)*T_CONTA + rnd()*0.01;
+      var dur = QUEDA * (tipo === "po" ? 0.75 + rnd()*0.3 : 0.95 + rnd()*0.5);   // pó cai mais rápido
+      var deriva = (rnd()-0.5) * W * 0.28;
+      var altura = 80 + rnd()*H*0.55;
+      var giro = (rnd()-0.5) * (tipo === "po" ? 3 : 5);
+      var balanco = (tipo === "po" ? 8 : 16) + rnd()*30, fase = rnd()*6.28, freq = 4 + rnd()*3;
+      var angBase = rnd()*Math.PI, dxA = Math.cos(angBase), dyA = Math.sin(angBase);
+      var compBase = (9 + Math.pow(rnd(),1.4)*22) * escala;
+      for (var i=0;i<qtd;i++){
+        var longo = tipo === "fio";
+        var tx, ty;
+        if (longo) {
+          // mecha: fios quase paralelos, deslocados ao longo do próprio fio e um pouquinho para o lado
+          var ao = gauss()*compBase*0.35, lado = gauss()*3.2*escala;
+          tx = base.x + dxA*ao - dyA*lado; ty = base.y + dyA*ao + dxA*lado;
+        } else { tx = base.x; ty = base.y; }
+        var comp = longo ? compBase * (0.6 + rnd()*0.7) : (1.4 + rnd()*3.4) * escala;
+        PARTES.push({
+          tipo: tipo, tx: tx, ty: ty,
+          x0: tx + deriva, y0: ty - (base.y + altura),
+          sx: base.solto ? fx + fr.width*(0.15+base.u*0.7) + gauss()*4 : fx + fr.width*mix(NA_FOTO.x0,NA_FOTO.x1,base.u) + gauss()*2,
+          sy: base.solto ? fy + fr.height*(0.6+base.w*0.35) + gauss()*4 : fy + fr.height*mix(NA_FOTO.y0,NA_FOTO.y1,base.w) + gauss()*1.5,
+          t0: t0, dur: dur, giro: giro, balanco: balanco, fase: fase, freq: freq,
+          ang: longo ? angBase + gauss()*0.16 : rnd()*Math.PI,
+          comp: comp,
+          raiz: longo ? (0.75 + rnd()*0.8) * escala : 0.8,
+          curva: longo ? gauss()*0.32 : 0,
+          onda: longo && rnd() < 0.28,           // alguns fios em "S"
+          tom: Math.min(4, Math.floor(Math.pow(rnd(),1.35)*5))   // mais escuros que claros
+        });
+      }
+    }
+
+    PARTES = [];
+    // quantidade de cabelo: computador > celular > celular fraco (modo leve ≈ 40% do celular)
+    var nPo = !cel ? 6800 : leve ? 1300 : 3200, nMechas = !cel ? 480 : leve ? 100 : 240;
+    var nSoltoPo = !cel ? 320 : leve ? 60 : 160, nSoltoFio = !cel ? 44 : leve ? 10 : 22;
+    var i;
+    // pó do degradê: cada grão cai sozinho e se espalha por igual, como na vida real
+    for (i=0;i<nPo;i++)        tufo("po",  npts ? pontoTexto : pontoSolto, 1);
+    // mechas da tesoura: 2 a 6 fios paralelos que caem juntos
+    for (i=0;i<nMechas;i++)    tufo("fio", npts ? pontoTexto : pontoSolto, 2 + Math.floor(rnd()*5));
+    // sobras soltas em volta do número
+    for (i=0;i<nSoltoPo;i++)   tufo("po",  pontoSolto, 1);
+    for (i=0;i<nSoltoFio;i++)  tufo("fio", pontoSolto, 1 + Math.floor(rnd()*3));
+    // pó primeiro (fica por baixo), fios por cima
+    PARTES.sort(function(a,b){ return (a.tipo === b.tipo) ? 0 : (a.tipo === "po" ? -1 : 1); });
+    PX = new Float32Array(PARTES.length); PY = new Float32Array(PARTES.length);
+    PA = new Float32Array(PARTES.length); PE = new Uint8Array(PARTES.length);
+    // ordem de pouso: o que já pousou é "impresso" uma vez no chão e não é redesenhado
+    ORDEM = PARTES.map(function(_, k){ return k; }).sort(function(a, b){ return (PARTES[a].t0 + PARTES[a].dur) - (PARTES[b].t0 + PARTES[b].dur); });
+    chao.width = tela.width; chao.height = tela.height; chaoK = 0; chaoP = -1;
+    ultimoP = -1; pronto = true;
+  }
+
+  // tons reais de cabelo escuro: do quase preto ao castanho, com leve transparência
+  var TONS = ["rgba(16,11,9,0.95)","rgba(28,20,16,0.92)","rgba(42,30,23,0.9)","rgba(60,44,34,0.85)","rgba(84,63,48,0.78)"];
+  var SOMBRA = "rgba(70,52,40,0.13)";
+
+  // desenha um fio afinado (forma preenchida: raiz larga → ponta em agulha)
+  function fio(c, x, y, ang, comp, raiz, curva, onda){
+    var dx = Math.cos(ang), dy = Math.sin(ang), nx = -dy, ny = dx, h = comp/2, w = raiz/2;
+    var ax = x - dx*h, ay = y - dy*h, bx = x + dx*h, by = y + dy*h;          // raiz → ponta
+    var k1 = curva*comp, k2 = onda ? -curva*comp : curva*comp;
+    var c1x = ax + dx*comp*0.33 + nx*k1, c1y = ay + dy*comp*0.33 + ny*k1;
+    var c2x = ax + dx*comp*0.66 + nx*k2, c2y = ay + dy*comp*0.66 + ny*k2;
+    c.moveTo(ax + nx*w, ay + ny*w);
+    c.bezierCurveTo(c1x + nx*w*0.7, c1y + ny*w*0.7, c2x + nx*w*0.3, c2y + ny*w*0.3, bx, by);
+    c.bezierCurveTo(c2x - nx*w*0.3, c2y - ny*w*0.3, c1x - nx*w*0.7, c1y - ny*w*0.7, ax - nx*w, ay - ny*w);
+    c.closePath();
+  }
+
+  // posições calculadas por quadro, em memória fixa (sem lixo para o coletor)
+  var PX = new Float32Array(0), PY = PX, PA = PX, PE = new Uint8Array(0);  // PE: 0 = ainda não caiu, 1 = no ar, 2 = no chão
+  var ORDEM = [], chao = document.createElement("canvas"), cctx = chao.getContext("2d"), chaoK = 0, chaoP = -1;
+
+  // pinta uma lista de índices (já com PX/PY/PA preenchidos): sombra, pó e fios
+  function pintar(c, ids, encolhe, comSombra){
+    var i, k, f, t;
+    if (comSombra) {
+      c.beginPath();
+      for (k=0;k<ids.length;k++){ i = ids[k]; f = PARTES[i]; if (f.tipo !== "fio" || PE[i] !== 2) continue;
+        fio(c, PX[i] + 0.9, PY[i] + 1.4, PA[i], f.comp*encolhe, f.raiz*1.6*encolhe, f.curva, f.onda); }
+      c.fillStyle = SOMBRA; c.fill();
+    }
+    c.lineCap = "round";
+    for (t=0;t<TONS.length;t++){
+      c.beginPath();
+      for (k=0;k<ids.length;k++){ i = ids[k]; f = PARTES[i]; if (f.tipo !== "po" || f.tom !== t) continue;
+        var l = f.comp*encolhe*0.5, cx = Math.cos(PA[i])*l, cy = Math.sin(PA[i])*l;
+        c.moveTo(PX[i]-cx, PY[i]-cy); c.lineTo(PX[i]+cx, PY[i]+cy); }
+      c.strokeStyle = TONS[t]; c.lineWidth = 0.85; c.stroke();
+    }
+    for (t=0;t<TONS.length;t++){
+      c.beginPath();
+      for (k=0;k<ids.length;k++){ i = ids[k]; f = PARTES[i]; if (f.tipo !== "fio" || f.tom !== t) continue;
+        fio(c, PX[i], PY[i], PA[i], f.comp*encolhe, f.raiz*encolhe + 0.15, f.curva, f.onda); }
+      c.fillStyle = TONS[t]; c.fill();
+    }
+  }
+
+  function posicao(i, p, corte){
+    var f = PARTES[i], q = (p - f.t0)/f.dur;
+    if (q <= 0) { PE[i] = 0; return false; }
+    if (q > 1) q = 1;
+    var e = 1 - Math.pow(1-q, 2.2);                    // cai leve, desacelera ao assentar
+    var x = f.x0 + (f.tx - f.x0)*e + Math.sin(q*f.freq + f.fase)*f.balanco*Math.pow(1-e, 0.8);
+    var y = f.y0 + (f.ty - f.y0)*e;
+    if (corte > 0){ x += (f.sx - x)*corte; y += (f.sy - y)*corte; }
+    PX[i] = x; PY[i] = y; PA[i] = f.ang + f.giro*(1-e); PE[i] = q >= 1 ? 2 : 1;
+    return true;
+  }
+
+  var noAr = [], todos = [];
+  function desenhar(p){
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+    var corte = suave(lim((p-T_CORTE)/0.10,0,1)), alfa = 1 - lim((p-0.87)/0.07,0,1);
+    if (alfa <= 0) return;
+    var n = PARTES.length, i, k;
+    ctx.globalAlpha = alfa;
+
+    if (corte > 0) {
+      // match-cut: tudo se move rumo ao "63" da foto — desenho completo
+      todos.length = 0;
+      for (i=0;i<n;i++) if (posicao(i, p, corte)) todos.push(i);
+      pintar(ctx, todos, mix(1, 0.32, corte), corte < 1);
+      ctx.globalAlpha = 1;
+      return;
+    }
+
+    // 1) chão: imprime só o que pousou desde o último quadro (voltou a rolagem? refaz o chão)
+    if (p < chaoP) { cctx.setTransform(1,0,0,1,0,0); cctx.clearRect(0,0,chao.width,chao.height); chaoK = 0; }
+    var novos = [];
+    while (chaoK < n) {
+      i = ORDEM[chaoK]; var f = PARTES[i];
+      if (f.t0 + f.dur > p) break;
+      PX[i] = f.tx; PY[i] = f.ty; PA[i] = f.ang; PE[i] = 2; novos.push(i); chaoK++;
+    }
+    if (novos.length) { cctx.setTransform(dpr,0,0,dpr,0,0); pintar(cctx, novos, 1, true); }
+    chaoP = p;
+    ctx.setTransform(1,0,0,1,0,0); ctx.drawImage(chao, 0, 0); ctx.setTransform(dpr,0,0,dpr,0,0);
+
+    // 2) no ar: só o que ainda está caindo
+    noAr.length = 0;
+    for (k=chaoK;k<n;k++){ i = ORDEM[k]; if (posicao(i, p, 0) && PE[i] === 1) noAr.push(i); }
+    pintar(ctx, noAr, 1, false);
+    ctx.globalAlpha = 1;
+  }
+  function contador(p){
+    var n = Math.round(TOTAL * lim((p - T_INI)/T_CONTA, 0, 1));
+    if (n === ultimoN) return;
+    // começa vazio (sem "00") e sobe 1, 2, 3… até 63 conforme a rolagem
+    numEl.textContent = n > 0 ? String(n) : "";
+    for (var i=0;i<TOTAL;i++) voltas[i].classList.toggle("aceso", i < n);
+    ultimoN = n;
+  }
+  /* medir o cabelo: no celular, mede quanto tempo cada quadro do cabelo leva para desenhar.
+     Pesado (mais de ~14 ms em média) → liga o modo leve (menos fios, imagem menor).
+     Ainda pesado no modo leve → "63 pronto": desenha o cabelo já assentado UMA vez e só faz aparecer/sumir. */
+  var tempos = [], estatico = false, estaticoFeito = false;
+  function medir(ms){
+    if (!raiz.classList.contains("r10-movel") || estatico) return;
+    tempos.push(ms);
+    if (tempos.length < 18) return;
+    tempos.sort(function(a,b){ return a-b; });
+    var mediana = tempos[9]; tempos.length = 0;
+    if (mediana <= 14) return;
+    if (!raiz.classList.contains("r10-leve")) { raiz.classList.add("r10-leve"); pronto = false; montar(); ultimoP = -1; }
+    else { estatico = true; }
+  }
+  function quadroRecorde(){
+    var p = progressoDe(secao);
+    if (p === ultimoP) return;
+    contador(p);
+    var o = lim((p - T_FOTO)/0.09, 0, 1);
+    foto.style.opacity = o.toFixed(3);
+    foto.style.clipPath = "inset(" + ((1-saida3(o))*100).toFixed(2) + "% 0 0 0)";
+    if (pronto) {
+      if (estatico) {
+        if (!estaticoFeito) { estaticoFeito = true; desenhar(T_CORTE - 0.001); }
+        // aparece junto com o número subindo e some quando a foto entra (só opacidade: leve)
+        tela.style.opacity = (lim((p - T_INI)/0.12, 0, 1) * (1 - lim((p - 0.87)/0.07, 0, 1))).toFixed(3);
+      } else {
+        var t0 = performance.now();
+        desenhar(p);
+        medir(performance.now() - t0);
+      }
+    }
+    ultimoP = p;
+  }
+  if (reduzido) {
+    numEl.textContent = "63";
+    for (var j=0;j<TOTAL;j++) voltas[j].classList.add("aceso");
+  } else {
+    // o cabelo (milhares de fios) só é preparado quando o recorde está chegando perto da tela,
+    // num momento ocioso — antes disso ele disputava o processador com a entrada do R10
+    var preparado = false;
+    var prepararCabelo = function(){
+      if (preparado) return; preparado = true;
+      var fazer = function(){ montar(); ultimoP = -1; quadroRecorde(); };
+      var ocioso = window.requestIdleCallback || function(f){ return setTimeout(f, 1); };
+      var fonte = document.fonts && document.fonts.load ? document.fonts.load("900 100px 'Big Shoulders Display'") : Promise.resolve();
+      fonte.then(function(){ ocioso(fazer, { timeout: 700 }); }, function(){ ocioso(fazer, { timeout: 700 }); });
+    };
+    // 1º termina a entrada do R10; depois, quando o recorde estiver a menos de ~1 tela de distância, prepara o cabelo
+    largadaFeita.then(function(){
+      if (!("IntersectionObserver" in window)) return prepararCabelo();
+      var obsCabelo = new IntersectionObserver(function(es){ if (es[0].isIntersecting) { obsCabelo.disconnect(); prepararCabelo(); } }, { rootMargin: "90% 0px" });
+      obsCabelo.observe(secao);
+    });
+    // remonta o cabelo só quando a LARGURA muda (no iPhone a barra do Safari muda só a altura ao rolar)
+    var espera, larguraR = innerWidth;
+    addEventListener("resize", function(){
+      if (!preparado) return;
+      if (raiz.classList.contains("r10-movel") && innerWidth === larguraR) return;
+      larguraR = innerWidth;
+      clearTimeout(espera); espera = setTimeout(function(){ montar(); estaticoFeito = false; ultimoP = -1; }, 180);
+    });
+  }
+
+  /* ---------- 3. Assinatura B: poste-velocímetro ---------- */
+  var poste = document.querySelector(".poste");
+  var listras = poste.querySelector(".poste__listras");
+  var ritmoEl = poste.querySelector(".poste__ritmo");
+  var desloc = 0, vel = 0, ultY = scrollY, ultT = performance.now(), estado = "";
+  var PERIODO = 72;
+  var FALAS = { parado:"No box", ritmo:"No ritmo", recorde:"Ritmo de recorde" };
+  if ("IntersectionObserver" in window) {
+    var finais = new Set();
+    var obs = new IntersectionObserver(function(es){
+      es.forEach(function(e){ e.isIntersecting ? finais.add(e.target) : finais.delete(e.target); });
+      poste.classList.toggle("recolhido", finais.size > 0);
+    }, { rootMargin: "0px 0px -35% 0px" });
+    // o poste continua visível no agendamento; só sai no rodapé (para não cobrir os links)
+    obs.observe(document.querySelector(".rodape"));
+  }
+  function quadro(agora){
+    var dt = Math.max(1, agora - ultT), inst = Math.abs(scrollY - ultY) / dt;
+    vel = vel*0.88 + inst*0.12; ultY = scrollY; ultT = agora;
+    if (!reduzido) {
+      desloc = (desloc + (0.018 + vel*0.9) * dt) % PERIODO;
+      listras.style.transform = "translate3d(0," + desloc.toFixed(2) + "px,0)";
+    }
+    var novo = vel > 2.4 ? "recorde" : vel > 0.25 ? "ritmo" : "parado";
+    if (novo !== estado){ estado = novo; poste.dataset.ritmo = novo; ritmoEl.textContent = FALAS[novo]; }
+    if (!reduzido) { quadroRecorde(); quadroLargada(); }
+    requestAnimationFrame(quadro);
+  }
+  requestAnimationFrame(quadro);
+})();
+</script>
+
+<script>
+/* ===================================================================
+   R10 — ponte com a conta (Supabase). O login de verdade mora no painel
+   "Sua conta" (assets/js/conta.js); agendamento e planos usam a mesma sessão.
+   r10Conta(function(conta){ ... })  → roda assim que a conta estiver pronta.
+   =================================================================== */
+var R10_AGENDA_URL = "https://script.google.com/macros/s/AKfycbxBOC26LjOF3i9Vmsj9Db8diI4AR0ajep1j-9y4Nk6MjlHHy5vcRd_xYtnGHHXaU_wt/exec";   // só para links antigos de cancelamento
+(function(){
+  var api = null, fila = [];
+  window.r10Conta = function(fn){ if (api) fn(api); else fila.push(fn); };
+  window.__r10ContaPronta = function(a){ api = a; fila.splice(0).forEach(function(f){ try { f(a); } catch(e){ console.error(e); } }); };
+})();
+function r10MascaraTel(v){
+  var d = String(v).replace(/\D/g,"").slice(0,11), s = d;
+  if (d.length > 2) s = "(" + d.slice(0,2) + ") " + d.slice(2);
+  if (d.length > 7) s = "(" + d.slice(0,2) + ") " + d.slice(2, d.length-4) + "-" + d.slice(d.length-4);
+  return s;
+}
+// bloco "entrar" usado no agendamento e no plano: fora = botão para entrar; dentro = quem está logado + nome e WhatsApp
+function r10BlocoConta(raiz, op){
+  raiz.innerHTML =
+    '<div class="entrar__fora">' +
+      '<p class="entrar__intro">' + (op.intro || "Para confirmar, entre na sua conta. Assim ninguém marca um horário falso no seu nome.") + '</p>' +
+      '<div class="entrar__linha"><button type="button" class="botao botao--linha botao--mini" data-b="entrar">Entrar ou criar conta</button></div>' +
+      '<p class="entrar__nota">Suas escolhas ficam guardadas: depois de entrar, você volta para cá.</p>' +
+    '</div>' +
+    '<div class="entrar__dentro">' +
+      '<div class="conectado"><span class="conectado__avatar" aria-hidden="true" data-b="avatar"></span>' +
+        '<span class="conectado__txt"><strong data-b="ola">Conectado</strong><span data-b="conta"></span></span>' +
+        '<button type="button" class="link-botao" data-b="sair">Sair</button></div>' +
+      '<div class="campos">' +
+        '<label class="campo"><span>Nome</span><input name="nome" autocomplete="name" maxlength="80"></label>' +
+        '<label class="campo"><span>WhatsApp</span><input name="telefone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(43) 99999-9999" maxlength="16"></label>' +
+      '</div>' +
+      '<div class="meus" data-b="meus" hidden></div>' +
+    '</div>';
+  var q = function(s){ return raiz.querySelector('[data-b="' + s + '"]'); };
+  var campo = function(n){ return raiz.querySelector('[name="' + n + '"]'); };
+  var conta = null;
+  campo("telefone").addEventListener("input", function(e){ e.target.value = r10MascaraTel(e.target.value); });
+  function render(){
+    var u = conta && conta.usuario(), p = conta && conta.perfil();
+    raiz.dataset.estado = u ? "dentro" : "fora";
+    if (!u) return;
+    var nome = (p && p.nome) || "";
+    q("avatar").textContent = (nome || u.email).charAt(0);
+    q("conta").textContent = u.email;
+    q("ola").textContent = nome ? "Olá, " + nome.split(" ")[0] : "Conectado";
+    if (!campo("nome").value) campo("nome").value = nome;
+    if (!campo("telefone").value && p && p.telefone) campo("telefone").value = r10MascaraTel(p.telefone);
+  }
+  q("entrar").addEventListener("click", function(){
+    if (!conta) return;
+    conta.pedirLogin(op.pedido || "Entre ou crie sua conta para continuar.").then(function(u){ if (u && op.aoEntrar) op.aoEntrar(); });
+  });
+  q("sair").addEventListener("click", function(){ if (conta) conta.sair(); });
+  r10Conta(function(c){ conta = c; c.ouvir(function(){ render(); if (op.aoMudar) op.aoMudar(); }); render(); if (op.aoMudar) op.aoMudar(); });
+  render();
+  return { q: q, campo: campo, render: render, conta: function(){ return conta; } };
+}
+</script>
+
+<script>
+/* ===================================================================
+   R10 — AGENDAMENTO em etapas → Google Agenda (com login)
+   1 Unidade · 2 Barbeiro · 3 Serviços · 4 Dia e horário · 5 Confirmar
+   O login (conta Supabase) é exigido para confirmar, na etapa 5.
+   =================================================================== */
+(function(){
+  "use strict";
+  var reduzido = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var PASSO_MIN = 30, DIAS_A_FRENTE = 21, ANTECEDENCIA_MIN = 30;
+  var UNIDADES = {
+    "cidade-alta": { nome:"Cidade Alta", endereco:"Rua Prefeito Aldo Sampaio Ribas, 355 – Cidade Alta, Jaguariaíva – PR" },
+    "fluviopolis": { nome:"Fluviopolis", endereco:"Rua Domingos Scolario, Sala 2" }
+  };
+  var BARBEIROS = [
+    { id:"jose",      nome:"José",        unidade:"cidade-alta", foto:"assets/barbeiros/jose.jpg",      semana:["13:00","19:30"], sabado:["09:00","17:30"] },
+    { id:"rhequelmy", nome:"Rhequelmy L", unidade:"fluviopolis", foto:"assets/barbeiros/rhequelmy.jpg", semana:["09:00","19:30"], sabado:["09:00","15:30"] },
+    { id:"fabio",     nome:"Fabio",       unidade:"fluviopolis", foto:"assets/barbeiros/fabio.jpg",     semana:["09:00","19:30"], sabado:["09:00","15:30"] }
+  ];
+  // min = duração em minutos. A CONFIRMAR com a barbearia (hoje 30 min cada). Mantenha igual ao Codigo.gs.
+  var SERVICOS = [
+    { id:"corte", nome:"Corte", preco:35, min:30, destaque:true },
+    { id:"cabelo-e-barba", nome:"Cabelo e barba", preco:55, min:30 },
+    { id:"barba", nome:"Barba", preco:30, min:30 },
+    { id:"sobrancelha-navalha", nome:"Sobrancelha na Navalha", preco:5, min:30 },
+    { id:"pigmentacao-e-corte", nome:"Pigmentação e corte", preco:50, min:30 },
+    { id:"pigmentacao-preta", nome:"Pigmentação Preta", preco:50, min:30 },
+    { id:"pigmentacao-sobrancelha", nome:"Pigmentação na sobrancelha", preco:15, min:30 },
+    { id:"alisamento-americano", nome:"Alisamento americano", preco:25, min:30 },
+    { id:"selagem-e-corte", nome:"Selagem e corte", preco:100, min:30 },
+    { id:"platinado-nevou", nome:"Platinado/Nevou", preco:120, min:30 },
+    { id:"luzes", nome:"Luzes", preco:120, min:30 }
+  ];
+  var SEMANA = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+  var MESES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  var MESES_LONGO = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+
+  /* --- feriados nacionais (qualquer ano, com Sexta-feira Santa) --- */
+  function pascoa(Y){
+    var a=Y%19,b=Math.floor(Y/100),c=Y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),
+        h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),
+        mes=Math.floor((h+l-7*m+114)/31),dia=((h+l-7*m+114)%31)+1;
+    return new Date(Y,mes-1,dia);
+  }
+  var cacheFeriados = {};
+  function feriados(Y){
+    if (cacheFeriados[Y]) return cacheFeriados[Y];
+    var lista = {};
+    ["01-01","04-21","05-01","09-07","10-12","11-02","11-15","11-20","12-25"].forEach(function(md){ lista[Y+"-"+md] = true; });
+    var sexta = pascoa(Y); sexta.setDate(sexta.getDate()-2); lista[iso(sexta)] = true;
+    return (cacheFeriados[Y] = lista);
+  }
+  function eFeriado(d){ return !!feriados(d.getFullYear())[iso(d)]; }
+
+  function dois(n){ return (n<10?"0":"")+n; }
+  function iso(d){ return d.getFullYear()+"-"+dois(d.getMonth()+1)+"-"+dois(d.getDate()); }
+  function deIso(s){ var p=s.split("-"); return new Date(+p[0],+p[1]-1,+p[2]); }
+  function min(h){ var p=h.split(":"); return (+p[0])*60+(+p[1]); }
+  function hhmm(m){ return dois(Math.floor(m/60))+":"+dois(m%60); }
+  function horaCurta(h){ var p=h.split(":"); return (+p[0])+"h"+(p[1]==="00"?"":p[1]); }
+  function reais(v){ return "R$ " + v.toLocaleString("pt-BR",{minimumFractionDigits:2}); }
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+  function vibrar(p){
+    try {
+      if (!navigator.vibrate) return;
+      if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;   // só depois de um toque real
+      navigator.vibrate(p);
+    } catch(e){}
+  }
+
+  function expediente(b, d){ var ds = d.getDay(); if (ds === 0 || eFeriado(d)) return null; return ds === 6 ? b.sabado : b.semana; }
+  function slotsDe(b, d){
+    var ex = expediente(b, d); if (!ex) return [];
+    var out = []; for (var m = min(ex[0]); m + PASSO_MIN <= min(ex[1]); m += PASSO_MIN) out.push(hhmm(m));
+    return out;
+  }
+
+  /* --- estado --- */
+  var form = document.getElementById("reserva");
+  var passos = Array.prototype.slice.call(form.querySelectorAll(".passo"));
+  var est = { unidade:null, barbeiro:null, servicos:[], dia:null, hora:null };
+  var passoAtual = 1;
+  var abertos = {};          // etapas abertas agora: { 1:true, 3:true … }
+  var ocupados = {};
+  var elBarb = document.getElementById("lista-barbeiros");
+  var elServ = document.getElementById("lista-servicos");
+  var elDias = document.getElementById("lista-dias");
+  var elHoras = document.getElementById("lista-horarios");
+  var elMes = document.getElementById("dias-mes");
+  var aviso = document.getElementById("aviso");
+  var entrar = document.getElementById("entrar");
+  var CHECK = '<svg viewBox="0 0 14 14" fill="none"><path d="M2 7.5 5.5 11 12 3.5" stroke="#740200" stroke-width="2.4"/></svg>';
+
+  function duracao(){
+    var t = 0; est.servicos.forEach(function(i){ t += SERVICOS[i].min; });
+    return Math.max(PASSO_MIN, Math.ceil(t / PASSO_MIN) * PASSO_MIN);
+  }
+  /* cupons do Clube: serviço grátis (ex.: "Vale 1 corte") usado no agendamento */
+  var meusCupons = [];       // cupons de serviço disponíveis da pessoa logada
+  function cupomEscolhido(){
+    if (!est.cupom) return null;
+    var c = meusCupons.filter(function(x){ return x.id === est.cupom; })[0];
+    if (!c) return null;
+    var i = SERVICOS.map(function(s){ return s.id; }).indexOf(c.servico_id);
+    return (i >= 0 && est.servicos.indexOf(i) >= 0) ? { cupom: c, indice: i } : null;
+  }
+  function total(){
+    var t = 0; est.servicos.forEach(function(i){ t += SERVICOS[i].preco; });
+    var cc = cupomEscolhido(); if (cc) t -= SERVICOS[cc.indice].preco;
+    return Math.max(0, t);
+  }
+  function nomeBarbeiro(id){ if (id === "qualquer") return "Sem preferência"; var b = BARBEIROS.filter(function(x){return x.id===id;})[0]; return b ? b.nome : "—"; }
+  function barbeirosDaUnidade(){ return BARBEIROS.filter(function(b){ return b.unidade === est.unidade; }); }
+  function diaLegivel(dataIso){ var d = deIso(dataIso); return SEMANA[d.getDay()].toLowerCase()+", "+dois(d.getDate())+"/"+dois(d.getMonth()+1); }
+
+  /* --- conta (mesma sessão do painel "Sua conta" e da contratação de planos) --- */
+  var sessao = null, sb = null;
+  var MSG = {
+    login: "Sua sessão expirou. Entre de novo.", dados: "Confira seu nome e WhatsApp.",
+    servico: "Algum serviço não está mais disponível.", horario: "Esse horário não está mais disponível. Escolha outro.",
+    ocupado: "Esse horário acabou de ser ocupado. Escolha outro.", limite: "Você já tem 2 horários marcados. Cancele um para marcar outro.",
+    nao_encontrado: "Não encontramos esse horário.",
+    cupom: "Esse cupom não vale mais para este agendamento. Desmarque e tente de novo.",
+    prazo: "Faltam menos de 2 horas para o horário: o cancelamento pelo site já fechou. Fale com a barbearia pelo WhatsApp."
+  };
+  function msgErro(e){ return MSG[String(e && e.message || "").trim()] || "Não foi possível agora. Tente de novo em instantes."; }
+  var login = r10BlocoConta(entrar, {
+    intro: "Para confirmar, entre na sua conta. Assim ninguém marca um horário falso no seu nome.",
+    pedido: "Entre ou crie sua conta para confirmar o horário. Suas escolhas ficam guardadas.",
+    aoEntrar: function(){ limparErros(); abrirPasso(5, true); },
+    aoMudar: function(){
+      var c = login && login.conta();
+      sessao = c ? c.usuario() : null;
+      carregarMeus(); atualizar();
+    }
+  });
+  r10Conta(function(c){ c.cliente().then(function(cli){ sb = cli; ocupados = {}; if (est.dia) renderHorarios(); carregarMeus(); }); });
+
+  /* ================= etapas ================= */
+  function completo(k){
+    return k === 1 ? !!est.unidade : k === 2 ? !!est.barbeiro : k === 3 ? est.servicos.length > 0 : k === 4 ? !!(est.dia && est.hora) : !!sessao;
+  }
+  function liberado(k){ for (var i=1;i<k;i++) if (!completo(i)) return false; return true; }
+  /* cada etapa abre e fecha sozinha, em qualquer ordem; várias podem ficar abertas (ver "abertos") */
+  function pintarPassos(){
+    passos.forEach(function(p, i){
+      var k = i + 1, a = !!abertos[k];
+      p.dataset.estado = a ? "aberto" : (completo(k) ? "feito" : "fechado");
+      p.classList.toggle("ok", completo(k));
+      p.querySelector(".passo__cab").setAttribute("aria-expanded", a ? "true" : "false");
+    });
+  }
+  function primeiraPendente(){ for (var k=1;k<=5;k++) if (!completo(k)) return k; return 5; }
+  function abrirPasso(n, rolar){
+    abertos[n] = true; passoAtual = n;
+    if (n === 5) prepararLogin();
+    atualizar();
+    if (rolar) setTimeout(function(){ rolarPara(passos[n-1]); }, reduzido ? 0 : 120);
+  }
+  function alternarPasso(k){
+    if (abertos[k]) { delete abertos[k]; if (passoAtual === k) passoAtual = primeiraPendente(); atualizar(); }
+    else abrirPasso(k, false);
+  }
+  // depois de uma escolha: fecha a etapa que acabou de ser preenchida e abre a próxima pendente
+  function proximo(de){
+    if (de && completo(de)) delete abertos[de];
+    abrirPasso(primeiraPendente(), true);
+  }
+  function rolarPara(el){
+    var r = el.getBoundingClientRect();
+    if (r.top > 70 && r.top < innerHeight * 0.45) return;      // já está bem à vista
+    scrollTo({ top: r.top + scrollY - 84, behavior: reduzido ? "auto" : "smooth" });
+  }
+  function erroPasso(k, msg){
+    var el = passos[k-1].querySelector(".passo__erro");
+    el.textContent = msg || "";
+    if (msg) { if (!abertos[k]) abrirPasso(k, true); else rolarPara(passos[k-1]); vibrar(30); }
+  }
+  function limparErros(){ form.querySelectorAll(".passo__erro").forEach(function(e){ e.textContent = ""; }); aviso.textContent = ""; aviso.className = "reserva__aviso"; }
+  passos.forEach(function(p, i){
+    var c = p.querySelector(".passo__cab");
+    var ok = document.createElement("span"); ok.className = "passo__ok"; ok.setAttribute("aria-hidden", "true");
+    ok.innerHTML = '<svg viewBox="0 0 14 14" fill="none"><path d="M2 7.5 5.5 11 12 3.5" stroke="#fff" stroke-width="2.4"/></svg>';
+    c.querySelector(".passo__titulo").after(ok);
+    var seta = document.createElement("span"); seta.className = "passo__seta"; seta.setAttribute("aria-hidden", "true");
+    seta.innerHTML = '<svg viewBox="0 0 14 14" fill="none" width="14" height="14"><path d="M2.5 5 7 9.5 11.5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    c.appendChild(seta);
+    c.addEventListener("click", function(){ alternarPasso(i + 1); });
+  });
+
+  /* ================= 1–2: unidade e barbeiro ================= */
+  function renderBarbeiros(){
+    var lista = barbeirosDaUnidade();
+    var html = lista.map(function(b){
+      return '<label class="barbeiro"><input type="radio" name="barbeiro" value="'+b.id+'">' +
+        '<span class="barbeiro__card"><img src="'+b.foto+'" alt="'+esc(b.nome)+'" width="480" height="640" loading="lazy" decoding="async">' +
+        '<span class="barbeiro__selo" aria-hidden="true">'+CHECK+'</span>' +
+        '<span class="barbeiro__info"><span class="barbeiro__nome">'+esc(b.nome)+'</span></span></span></label>';
+    }).join("");
+    if (!est.unidade) { elBarb.innerHTML = '<p class="passo__dica">Escolha a unidade na etapa 01 para ver os barbeiros.</p>'; return; }
+    if (lista.length > 1) html += '<label class="barbeiro barbeiro--qualquer"><input type="radio" name="barbeiro" value="qualquer">' +
+      '<span class="barbeiro__card"><span class="barbeiro__r10" aria-hidden="true">R10</span><span class="barbeiro__selo" aria-hidden="true">'+CHECK+'</span>' +
+      '<span class="barbeiro__info"><span class="barbeiro__nome">Sem preferência</span><span class="barbeiro__horas"><span>Quem estiver livre</span></span></span></span></label>';
+    elBarb.innerHTML = html;
+  }
+
+  /* ================= 3: serviços ================= */
+  function renderServicos(){
+    elServ.innerHTML = SERVICOS.map(function(s,i){
+      return '<label class="torre__linha"><input type="checkbox" name="servico" value="'+i+'"'+(est.servicos.indexOf(i) >= 0 ? ' checked' : '')+'>' +
+        '<span class="torre__check">'+CHECK+'</span>' +
+        '<span class="torre__nome">'+esc(s.nome)+(s.destaque?' <em>Mais pedido</em>':'')+'</span>' +
+        '<span class="torre__preco">'+reais(s.preco)+'</span></label>';
+    }).join("");
+  }
+  renderServicos();
+
+  /* ================= catálogo vindo do banco (o dono muda no /gestor e o site acompanha na hora) =================
+     serviços (preço, duração, ativo), barbeiros (foto, expediente, ativo) e configurações (aberta/fechada, aviso, WhatsApp) */
+  var CONFIG = { aberta: true, whatsapp: "5543999850351" };
+  function aplicarCatalogo(serv, profs, exps, cfg){
+    if (serv && serv.length) {
+      var escolhidos = est.servicos.map(function(i){ return SERVICOS[i] && SERVICOS[i].id; });
+      SERVICOS = serv.map(function(s){ return { id:s.id, nome:s.nome, preco:s.preco_centavos/100, min:s.duracao_min, destaque:s.destaque }; });
+      est.servicos = escolhidos.map(function(id){ return SERVICOS.map(function(s){ return s.id; }).indexOf(id); }).filter(function(i){ return i >= 0; });
+      renderServicos(); renderCupons();
+    }
+    if (profs && profs.length) {
+      var hora = function(t){ return t ? String(t).slice(0,5) : null; };
+      BARBEIROS = profs.map(function(p){
+        var dSemana = (exps || []).filter(function(e){ return e.profissional_id === p.id && e.dia_semana === 1; })[0];
+        var dSab = (exps || []).filter(function(e){ return e.profissional_id === p.id && e.dia_semana === 6; })[0];
+        var antigo = BARBEIROS.filter(function(b){ return b.id === p.id; })[0] || {};
+        return { id:p.id, nome:p.nome, unidade:p.unidade_id, foto:p.foto_url ? p.foto_url.replace(/^\//, "") : (antigo.foto || "assets/logo-r10.png"),
+                 semana: dSemana ? [hora(dSemana.inicio), hora(dSemana.fim)] : (antigo.semana || ["09:00","19:30"]),
+                 sabado: dSab ? [hora(dSab.inicio), hora(dSab.fim)] : (antigo.sabado || ["09:00","15:30"]) };
+      });
+      if (est.barbeiro && est.barbeiro !== "qualquer" && !BARBEIROS.some(function(b){ return b.id === est.barbeiro; })) { est.barbeiro = null; est.hora = null; }
+      if (est.unidade) renderBarbeiros();
+    }
+    if (cfg) {
+      CONFIG = cfg;
+      var aviso = document.getElementById("aviso-site");
+      aviso.hidden = !(cfg.aviso_ativo && cfg.aviso_texto);
+      aviso.querySelector("span").textContent = cfg.aviso_texto || "";
+      document.getElementById("fechada").hidden = cfg.aberta !== false;
+      document.querySelectorAll('a[href^="https://wa.me/"]').forEach(function(a){ a.href = a.href.replace(/wa\.me\/\d+/, "wa.me/" + soNum(cfg.whatsapp)); });
+    }
+    ocupados = {}; if (est.dia) renderHorarios(); atualizar();
+  }
+  function soNum(v){ return String(v || "").replace(/\D/g, ""); }
+  function carregarCatalogo(cli){
+    Promise.all([
+      cli.from("servicos").select("id, nome, preco_centavos, duracao_min, destaque, ordem").eq("ativo", true).order("ordem"),
+      cli.from("profissionais").select("id, nome, unidade_id, foto_url, ordem").eq("ativo", true).order("ordem"),
+      cli.from("expedientes").select("profissional_id, dia_semana, inicio, fim"),
+      cli.from("configuracoes").select("aberta, whatsapp, instagram, aviso_texto, aviso_ativo").maybeSingle()
+    ]).then(function(r){ aplicarCatalogo(r[0].data, r[1].data, r[2].data, r[3].data); }, function(){});
+  }
+  r10Conta(function(c){ c.cliente().then(function(cli){
+    if (!cli) return;
+    carregarCatalogo(cli);
+    var espera;
+    cli.channel("catalogo-site")
+      .on("postgres_changes", { event: "*", schema: "public", table: "servicos" }, function(){ clearTimeout(espera); espera = setTimeout(function(){ carregarCatalogo(cli); }, 300); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "profissionais" }, function(){ clearTimeout(espera); espera = setTimeout(function(){ carregarCatalogo(cli); }, 300); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "configuracoes" }, function(){ clearTimeout(espera); espera = setTimeout(function(){ carregarCatalogo(cli); }, 300); })
+      .subscribe();
+  }); });
+  document.getElementById("continuar-servicos").addEventListener("click", continuarServicos);
+  function continuarServicos(){
+    if (!est.servicos.length) return erroPasso(3, "Escolha pelo menos um serviço.");
+    proximo(3);
+  }
+
+  /* ================= 4: dia e horário ================= */
+  (function(){
+    var hoje = new Date(); hoje.setHours(0,0,0,0);
+    var html = "";
+    for (var i=0;i<DIAS_A_FRENTE;i++){
+      var d = new Date(hoje); d.setDate(hoje.getDate()+i);
+      var dom = d.getDay()===0, fer = eFeriado(d), fechado = dom || fer;
+      html += '<label class="opcao dia'+(fechado?' fechado':'')+'" data-mes="'+d.getMonth()+'"'+(fer?' title="Feriado nacional"':'')+'>' +
+        '<input type="radio" name="dia" value="'+iso(d)+'"'+(fechado?' disabled':'')+'>' +
+        '<span class="opcao__caixa"><span class="dia__semana">'+(i===0?"Hoje":i===1?"Amanhã":SEMANA[d.getDay()])+'</span>' +
+        '<span class="dia__num">'+d.getDate()+'</span><span class="dia__mes">'+(fer?"Feriado":dom?"Fechado":MESES[d.getMonth()])+'</span></span></label>';
+    }
+    elDias.innerHTML = html;
+    var ano = hoje.getFullYear();
+    function mesVisivel(){
+      var itens = elDias.children, esq = elDias.scrollLeft;
+      for (var j=0;j<itens.length;j++) if (itens[j].offsetLeft + itens[j].offsetWidth/2 >= esq) { elMes.textContent = MESES_LONGO[+itens[j].dataset.mes] + " " + ano; return; }
+    }
+    elDias.addEventListener("scroll", mesVisivel, { passive:true });
+    mesVisivel();
+    form.querySelectorAll("[data-seta]").forEach(function(b){
+      b.addEventListener("click", function(){ elDias.scrollBy({ left: +b.dataset.seta * 270, behavior: reduzido ? "auto" : "smooth" }); });
+    });
+  })();
+
+  // horários livres calculados SEM o banco (só se a conta não carregar): expediente local, sem ver ocupados
+  function livres(dataIso){
+    var d = deIso(dataIso), agora = new Date(), limite = null, dur = duracao();
+    if (iso(agora) === dataIso) limite = agora.getHours()*60 + agora.getMinutes() + ANTECEDENCIA_MIN;
+    var oc = {};
+    var alvo = est.barbeiro === "qualquer" ? barbeirosDaUnidade() : BARBEIROS.filter(function(b){ return b.id === est.barbeiro; });
+    var set = {};
+    alvo.forEach(function(b){
+      var lista = slotsDe(b, d), oc_b = oc[b.id] || [];
+      lista.forEach(function(h){
+        if (limite !== null && min(h) < limite) return;
+        for (var m = min(h); m < min(h) + dur; m += PASSO_MIN) {          // o serviço inteiro precisa caber
+          var x = hhmm(m); if (lista.indexOf(x) < 0 || oc_b.indexOf(x) >= 0) return;
+        }
+        set[h] = true;
+      });
+    });
+    return Object.keys(set).sort();
+  }
+  var pedidoAtual = 0;
+  function renderHorarios(){
+    if (!est.barbeiro) { elHoras.innerHTML = '<p class="passo__dica">Escolha o barbeiro na etapa 02 para ver os horários livres.</p>'; return; }
+    if (!est.dia) { elHoras.innerHTML = '<p class="passo__dica">Escolha o dia para ver os horários livres.</p>'; return; }
+    var dataIso = est.dia, meu = ++pedidoAtual;
+    var ids = est.servicos.length ? est.servicos.map(function(i){ return SERVICOS[i].id; }) : ["corte"];
+    var chave = [dataIso, est.unidade, est.barbeiro, ids.join(",")].join("|");
+    function pintar(){
+      if (meu !== pedidoAtual) return;
+      var hs = sb ? (ocupados[chave] || []) : livres(dataIso);
+      if (est.hora && hs.indexOf(est.hora) < 0) est.hora = null;
+      if (!hs.length) { elHoras.innerHTML = '<p class="passo__dica">Sem horários livres neste dia. Tente outro dia ou outro barbeiro.</p>'; atualizar(); return; }
+      var grupos = [["Manhã",0,720],["Tarde",720,1080],["Noite",1080,1440]];
+      elHoras.innerHTML = grupos.map(function(g){
+        var dentro = hs.filter(function(h){ var m = min(h); return m >= g[1] && m < g[2]; });
+        if (!dentro.length) return "";
+        return '<div class="periodo"><h4>'+g[0]+'</h4><div class="horarios" role="radiogroup" aria-label="'+g[0]+'">' + dentro.map(function(h){
+          return '<label class="opcao horario"><input type="radio" name="hora" value="'+h+'"'+(h===est.hora?' checked':'')+'><span class="opcao__caixa">'+h+'</span></label>';
+        }).join("") + '</div></div>';
+      }).join("");
+      atualizar();
+    }
+    // com o banco: os horários livres vêm do servidor (já descontando ocupados, folgas e a duração real)
+    if (sb && !ocupados[chave]) {
+      var esqueleto = ""; for (var i=0;i<8;i++) esqueleto += '<span class="opcao horario carregando"><span class="opcao__caixa">00:00</span></span>';
+      elHoras.innerHTML = '<div class="periodo"><h4>Consultando a agenda</h4><div class="horarios">'+esqueleto+'</div></div>';
+      sb.rpc("horarios_livres", { p_unidade: est.unidade, p_profissional: est.barbeiro, p_data: dataIso, p_servicos: ids })
+        .then(function(r){
+          if (r.error) { elHoras.innerHTML = '<p class="passo__dica">Não foi possível consultar a agenda agora. Tente de novo em instantes.</p>'; return; }
+          ocupados[chave] = (r.data || []).map(function(x){ return x.hora; }); pintar();
+        });
+    } else pintar();
+  }
+
+  /* ================= 5: conta e "seus próximos horários" ================= */
+  function prepararLogin(){ login.render(); }
+  function renderEntrar(){ login.render(); }
+
+  function quandoLegivel(isoTs){
+    var d = new Date(isoTs);
+    return d.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).replace(",", "");
+  }
+  var elCupons = document.getElementById("cupons-reserva");
+  function carregarCupons(){
+    if (!sessao || !sb) { meusCupons = []; est.cupom = null; renderCupons(); return; }
+    sb.from("cupons").select("id, premio, servico_id, expira_em").eq("tipo", "servico")
+      .is("usado_em", null).gt("expira_em", new Date().toISOString()).order("expira_em").then(function(r){
+        meusCupons = r.error ? [] : (r.data || []);
+        if (est.cupom && !meusCupons.some(function(c){ return c.id === est.cupom; })) est.cupom = null;
+        renderCupons(); atualizar();
+      });
+  }
+  function renderCupons(){
+    if (!meusCupons.length) { elCupons.hidden = true; elCupons.innerHTML = ""; return; }
+    elCupons.hidden = false;
+    var ids = SERVICOS.map(function(s){ return s.id; });
+    elCupons.innerHTML = '<h4>Seus cupons do Clube</h4>' + meusCupons.map(function(c){
+      var i = ids.indexOf(c.servico_id), nomeServ = i >= 0 ? SERVICOS[i].nome : "serviço";
+      var pode = i >= 0 && est.servicos.indexOf(i) >= 0;
+      var vale = new Date(c.expira_em).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+      return '<label class="cupom-r' + (pode ? '' : ' cupom-r--off') + '">' +
+        '<input type="checkbox" name="cupom" value="' + esc(c.id) + '"' + (est.cupom === c.id ? ' checked' : '') + (pode ? '' : ' disabled') + '>' +
+        '<span><strong>' + esc(c.premio) + '</strong><small>' + (pode ? nomeServ + ' de graça neste horário · vale até ' + vale : 'Escolha "' + esc(nomeServ) + '" no passo 03 para usar') + '</small></span></label>';
+    }).join("");
+  }
+  elCupons.addEventListener("change", function(e){
+    if (e.target.name !== "cupom") return;
+    est.cupom = e.target.checked ? e.target.value : null;
+    elCupons.querySelectorAll('input[name="cupom"]').forEach(function(x){ if (x !== e.target) x.checked = false; });   // um cupom por horário
+    atualizar();
+  });
+
+  function carregarMeus(){
+    var box = login.q("meus");
+    carregarCupons();
+    if (!sessao || !sb) { box.hidden = true; return; }
+    sb.from("agendamentos").select("id, inicio, profissionais(nome)").eq("status", "agendado")
+      .gte("inicio", new Date().toISOString()).order("inicio").limit(5).then(function(r){
+        var lista = r.data || [];
+        if (r.error || !lista.length) { box.hidden = true; return; }
+        box.hidden = false;
+        box.innerHTML = '<h4>Seus próximos horários</h4>' + lista.map(function(x){
+          return '<div class="meu"><span><strong>'+esc(quandoLegivel(x.inicio))+'</strong><span>'+esc(x.profissionais ? x.profissionais.nome : "")+'</span></span>' +
+            '<button type="button" class="link-botao" data-cancelar="'+esc(x.id)+'">Cancelar</button></div>';
+        }).join("");
+      });
+  }
+  login.q("meus").addEventListener("click", function(e){
+    var b = e.target.closest("[data-cancelar]"); if (!b) return;
+    if (!b.dataset.certeza) { b.dataset.certeza = "1"; b.textContent = "Confirmar cancelamento"; return; }
+    b.disabled = true; b.textContent = "Cancelando…";
+    sb.rpc("cancelar_agendamento", { p_id: b.dataset.cancelar }).then(function(r){
+      if (r.error) { b.disabled = false; b.textContent = "Não cancelado"; erroPasso(5, msgErro(r.error)); return; }
+      ocupados = {}; carregarMeus(); if (est.dia) renderHorarios();
+    });
+  });
+
+  /* ================= resumo, progresso e barra ================= */
+  function por(chave, txt){
+    var el = form.querySelector('[data-r="'+chave+'"]'); if (!el) return;
+    el.textContent = txt || "—"; el.classList.toggle("vazio", !txt);
+  }
+  var barra = document.getElementById("barra");
+  var barraBotao = barra.querySelector(".barra__botao");
+  function atualizar(){
+    var nServ = est.servicos.length;
+    por("unidade", est.unidade && UNIDADES[est.unidade].nome);
+    por("barbeiro", est.barbeiro && nomeBarbeiro(est.barbeiro));
+    por("servicos", est.servicos.map(function(i){ return SERVICOS[i].nome; }).join(", "));
+    por("dia", est.dia && diaLegivel(est.dia));
+    por("hora", est.hora);
+    form.querySelector('[data-r="total"]').textContent = reais(total());
+    pintarPassos();
+    form.querySelector('[data-r="passo"]').textContent = passoAtual;
+    var escolhas = [
+      est.unidade ? UNIDADES[est.unidade].nome : "",
+      est.barbeiro ? nomeBarbeiro(est.barbeiro) : "",
+      nServ ? (nServ === 1 ? SERVICOS[est.servicos[0]].nome : nServ + " serviços") + " · " + reais(total()) : "",
+      est.dia && est.hora ? diaLegivel(est.dia) + " · " + est.hora : (est.dia ? diaLegivel(est.dia) : ""),
+      sessao ? sessao.email : ""
+    ];
+    passos.forEach(function(p, i){ p.querySelector(".passo__escolha").textContent = escolhas[i]; });
+    form.querySelectorAll(".progresso i").forEach(function(b, i){
+      b.className = completo(i+1) ? "feito" : (i+1 === passoAtual ? "atual" : "");
+    });
+    // barra do celular: só o total e um atalho discreto
+    barra.querySelector(".barra__total").textContent = reais(total());
+    var pronto4 = liberado(5);
+    if (passoAtual === 3 && nServ) { barraBotao.hidden = false; barraBotao.firstChild.nodeValue = "Continuar "; barraBotao.dataset.acao = "continuar"; }
+    else if (pronto4) { barraBotao.hidden = false; barraBotao.firstChild.nodeValue = "Confirmar "; barraBotao.dataset.acao = "confirmar"; }
+    else barraBotao.hidden = true;
+  }
+  barraBotao.addEventListener("click", function(){
+    if (barraBotao.dataset.acao === "continuar") continuarServicos(); else form.requestSubmit();
+  });
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function(es){
+      var vis = es[0].isIntersecting && !form.classList.contains("feito");
+      barra.classList.toggle("visivel", vis);
+      document.documentElement.classList.toggle("barra-ativa", vis);
+    }, { rootMargin: "0px 0px -20% 0px" }).observe(form);
+  }
+
+  /* ================= escolhas ================= */
+  form.addEventListener("change", function(ev){
+    var n = ev.target.name, v = ev.target.value;
+    if (["unidade","barbeiro","servico","dia","hora"].indexOf(n) >= 0) limparErros();
+    if (n === "unidade") {
+      est.unidade = v; est.barbeiro = null; est.hora = null; renderBarbeiros(); renderHorarios(); atualizar();
+      setTimeout(function(){ proximo(1); }, reduzido ? 0 : 120);
+    } else if (n === "barbeiro") {
+      est.barbeiro = v; est.hora = null; renderHorarios(); atualizar();
+      setTimeout(function(){ proximo(2); }, reduzido ? 0 : 150);
+    } else if (n === "servico") {
+      est.servicos = Array.prototype.map.call(form.querySelectorAll('input[name="servico"]:checked'), function(i){ return +i.value; });
+      if (est.cupom && !cupomEscolhido()) est.cupom = null;   // tirou o serviço do cupom: o cupom sai junto
+      renderCupons();
+      if (est.dia) renderHorarios();          // a duração mudou: refaz os horários que cabem
+      atualizar();
+    } else if (n === "dia") {
+      est.dia = v; est.hora = null; renderHorarios(); atualizar();
+    } else if (n === "hora") {
+      est.hora = v; atualizar(); vibrar(10);
+      setTimeout(function(){ proximo(4); }, reduzido ? 0 : 120);
+    }
+  });
+
+  var tel = form.elements.telefone;
+  tel.addEventListener("input", function(){
+    var d = tel.value.replace(/\D/g,"").slice(0,11), s = d;
+    if (d.length > 2) s = "(" + d.slice(0,2) + ") " + d.slice(2);
+    if (d.length > 7) s = "(" + d.slice(0,2) + ") " + d.slice(2, d.length-4) + "-" + d.slice(d.length-4);
+    tel.value = s;
+  });
+
+  /* ================= confirmar ================= */
+  function datas(){
+    var d = deIso(est.dia), ini = new Date(d.getFullYear(), d.getMonth(), d.getDate(), +est.hora.slice(0,2), +est.hora.slice(3));
+    return { ini: ini, fim: new Date(ini.getTime() + duracao()*60000) };
+  }
+  function z(x){ return x.toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,""); }
+  function linkGoogle(barbeiroNome){
+    var t = datas(), u = UNIDADES[est.unidade];
+    return "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+      "&text=" + encodeURIComponent("R10 Barbearia — " + est.servicos.map(function(i){return SERVICOS[i].nome;}).join(", ")) +
+      "&dates=" + z(t.ini) + "/" + z(t.fim) +
+      "&details=" + encodeURIComponent("Barbeiro: " + barbeiroNome + "\nWhatsApp da barbearia: (43) 99985-0351") +
+      "&location=" + encodeURIComponent("R10 Barbearia " + u.nome + " — " + u.endereco);
+  }
+  function linkIcs(barbeiroNome){
+    var t = datas(), u = UNIDADES[est.unidade];
+    function e(s){ return String(s).replace(/([,;\\])/g, "\\$1"); }
+    var l = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//R10 Barbearia//Agendamento//PT","BEGIN:VEVENT",
+      "UID:" + Date.now() + "@r10barbearia", "DTSTAMP:" + z(new Date()), "DTSTART:" + z(t.ini), "DTEND:" + z(t.fim),
+      "SUMMARY:" + e("R10 Barbearia — " + est.servicos.map(function(i){return SERVICOS[i].nome;}).join(", ")),
+      "LOCATION:" + e("R10 Barbearia " + u.nome + " — " + u.endereco),
+      "DESCRIPTION:" + e("Barbeiro: " + barbeiroNome),
+      "BEGIN:VALARM","TRIGGER:-PT60M","ACTION:DISPLAY","DESCRIPTION:R10 Barbearia","END:VALARM","END:VEVENT","END:VCALENDAR"];
+    return "data:text/calendar;charset=utf-8," + encodeURIComponent(l.join("\r\n"));
+  }
+  function concluir(j){
+    var barbeiroNome = j.barbeiro || nomeBarbeiro(est.barbeiro);
+    document.getElementById("confirmado-texto").textContent =
+      "Seu horário está reservado, " + form.elements.nome.value.trim().split(" ")[0] + ". " +
+      diaLegivel(est.dia).replace(/^./, function(c){ return c.toUpperCase(); }) + " às " + est.hora + " com " + barbeiroNome +
+      ", unidade " + UNIDADES[est.unidade].nome + ". Total: " + reais(total()) + ".";
+    document.getElementById("add-agenda").href = linkGoogle(barbeiroNome);
+    document.getElementById("add-ics").href = linkIcs(barbeiroNome);
+    // comprovante pronto para mandar no WhatsApp da barbearia
+    var d = deIso(est.dia);
+    var msg = "Olá, R10 Barbearia! Acabei de agendar pelo site:\n\n" +
+      "Nome: " + form.elements.nome.value.trim() + "\n" +
+      "Serviço: " + est.servicos.map(function(i){ return SERVICOS[i].nome; }).join(", ") + "\n" +
+      "Barbeiro: " + barbeiroNome + "\n" +
+      "Data: " + dois(d.getDate()) + "/" + dois(d.getMonth()+1) + "/" + d.getFullYear() + " (" + SEMANA[d.getDay()].toLowerCase() + ")\n" +
+      "Horário: " + est.hora + "\n" +
+      "Unidade: " + UNIDADES[est.unidade].nome + "\n" +
+      "Total: " + reais(total());
+    document.getElementById("add-whats").href = "https://wa.me/" + soNum(CONFIG.whatsapp || "5543999850351") + "?text=" + encodeURIComponent(msg);
+    form.classList.add("feito");
+    barra.classList.remove("visivel"); document.documentElement.classList.remove("barra-ativa");
+    vibrar([18, 50, 28]);
+    ocupados = {};
+    setTimeout(function(){ form.querySelector(".reserva__resumo").scrollIntoView({ behavior: reduzido ? "auto" : "smooth", block: "center" }); }, 60);
+  }
+
+  var botao = document.getElementById("confirmar");
+  form.addEventListener("submit", function(ev){
+    ev.preventDefault();
+    if (form.elements.site.value) return; // robô
+    limparErros();
+    if (!est.unidade) return erroPasso(1, "Escolha a unidade.");
+    if (!est.barbeiro) return erroPasso(2, "Escolha o barbeiro.");
+    if (!est.servicos.length) return erroPasso(3, "Escolha pelo menos um serviço.");
+    if (!est.dia) return erroPasso(4, "Escolha o dia.");
+    if (!est.hora) return erroPasso(4, "Escolha o horário.");
+    // sem conta: abre "Entrar / Criar conta" e, depois de entrar, volta para cá com tudo escolhido
+    if (!sessao) {
+      abrirPasso(5, true);
+      var c = login.conta();
+      if (c) c.pedirLogin("Entre ou crie sua conta para confirmar o horário. Suas escolhas ficam guardadas.")
+        .then(function(u){ if (u) { limparErros(); abrirPasso(5, true); } });
+      return erroPasso(5, "Para confirmar, entre na sua conta ou crie uma.");
+    }
+    if (!abertos[5]) abrirPasso(5, true);
+    var nome = form.elements.nome.value.trim();
+    if (nome.length < 2) { form.elements.nome.focus(); return erroPasso(5, "Digite seu nome."); }
+    if (!/^\d{10,11}$/.test(tel.value.replace(/\D/g,""))) { tel.focus(); return erroPasso(5, "Digite seu WhatsApp com DDD."); }
+    if (!sb) return erroPasso(5, "A agenda online não carregou. Atualize a página e tente de novo.");
+
+    botao.disabled = true; barraBotao.disabled = true;
+    aviso.className = "reserva__aviso"; aviso.textContent = "Reservando seu horário…";
+    sb.rpc("agendar", {
+      p_unidade: est.unidade, p_profissional: est.barbeiro,
+      p_servicos: est.servicos.map(function(i){ return SERVICOS[i].id; }),
+      p_data: est.dia, p_hora: est.hora, p_nome: nome, p_telefone: tel.value,
+      p_cupom: cupomEscolhido() ? est.cupom : null
+    }).then(function(r){
+      botao.disabled = false; barraBotao.disabled = false; aviso.textContent = "";
+      if (!r.error) { carregarMeus(); return concluir({ barbeiro: r.data && r.data.profissional_nome }); }
+      var k = String(r.error.message || "").trim();
+      if (k === "ocupado" || k === "horario") { ocupados = {}; est.hora = null; renderHorarios(); return erroPasso(4, msgErro(r.error)); }
+      if (k === "limite") carregarMeus();
+      erroPasso(5, msgErro(r.error));
+    }, function(){
+      botao.disabled = false; barraBotao.disabled = false; aviso.textContent = "";
+      erroPasso(5, "Sem conexão com a agenda agora. Confira sua internet e tente de novo.");
+    });
+  });
+
+  document.getElementById("novo").addEventListener("click", function(){
+    var nome = form.elements.nome.value, telv = tel.value;
+    form.reset(); form.classList.remove("feito");
+    form.elements.nome.value = nome; tel.value = telv;
+    est = { unidade:null, barbeiro:null, servicos:[], dia:null, hora:null, cupom:null };
+    carregarCupons();
+    ocupados = {}; abertos = {};
+    renderBarbeiros(); renderHorarios(); renderEntrar(); abrirPasso(1, false);
+    form.scrollIntoView({ behavior: reduzido ? "auto" : "smooth" });
+  });
+
+  /* ================= cancelamento pelo link do e-mail (#cancelar=…) ================= */
+  (function(){
+    var m = /#cancelar=([\w\-.]+)/.exec(location.hash);
+    if (!m) return;
+    var token = m[1];
+    var dlg = document.getElementById("dialogo-cancelar");
+    var titulo = dlg.querySelector("h3"), texto = dlg.querySelector("p"), sim = dlg.querySelector("[data-sim]"), nao = dlg.querySelector("[data-nao]");
+    nao.addEventListener("click", function(){ dlg.close(); history.replaceState(null, "", location.pathname); });
+    sim.addEventListener("click", function(){
+      sim.disabled = true; sim.firstChild.nodeValue = "Cancelando… ";
+      // links antigos (e-mails enviados antes da conta): o Apps Script ainda cancela pelo token
+      fetch(R10_AGENDA_URL, { method:"POST", body: JSON.stringify({ acao: "cancelarLink", token: token }) }).then(function(r){ return r.json(); }).then(function(j){
+        titulo.textContent = j.ok ? "Cancelado" : "Ops";
+        texto.textContent = j.ok ? "Seu horário de " + j.quando + (j.barbeiro ? " com " + j.barbeiro : "") + " foi cancelado e já está livre para outra pessoa." : (j.mensagem || "Não foi possível cancelar.");
+        sim.hidden = true; nao.textContent = "Fechar"; history.replaceState(null, "", location.pathname);
+      }).catch(function(){ sim.disabled = false; sim.firstChild.nodeValue = "Tentar de novo "; });
+    });
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+  })();
+
+  renderBarbeiros(); renderHorarios();
+  abrirPasso(1, false);
+})();
+</script>
+
+<script>
+/* ===================================================================
+   R10 — PLANOS: vantagens (acordeão) e contratação, sem sair do site
+   Abre por: botões [data-plano], ou o endereço #plano=<id> (vindo da área do cliente)
+   =================================================================== */
+(function(){
+  "use strict";
+  // valores oficiais da R10 (sistema atual). Extras e produtos: 10% OFF para assinantes.
+  var EXTRAS = [
+    ["Sobrancelha na Navalha", 5, 4.5], ["Pigmentação Preta", 50, 45], ["Pigmentação e corte", 50, 45], ["Selagem e corte", 100, 90],
+    ["Alisamento americano", 25, 22.5], ["Pigmentação na sobrancelha", 15, 13.5], ["Platinado/Nevou", 120, 108], ["Luzes", 120, 108]
+  ];
+  var PRODUTOS = [["Pomada efeito seco", 20, 18], ["Shampoo anti-caspa", 30, 27], ["Minoxidil", 85, 76.5], ["Balm barba", 30, 27]];
+  var OUTROS = [["Periodicidade", "Agenda liberada com 7 dias de antecedência."]];
+  var PLANOS = {
+    "corte-ilimitado": {
+      nome: "Plano Corte Ilimitado", preco: 95, vigencia: "Indeterminado",
+      resumo: "Corte ilimitado",
+      inclusos: [{ nome: "Corte", de: 35, dias: "Segunda a sábado", nota: "Quantas vezes quiser no mês" }]
+    },
+    "cabelo-barba-ilimitado": {
+      nome: "Cabelo e barba ilimitado", preco: 130, vigencia: "Indeterminado",
+      resumo: "Corte e barba ilimitados",
+      inclusos: [
+        { nome: "Corte", de: 35, dias: "Segunda a sábado", nota: "Quantas vezes quiser no mês" },
+        { nome: "Barba", de: 30, dias: "Segunda a sábado", nota: "Quantas vezes quiser no mês" }
+      ]
+    }
+  };
+
+  var dlg = document.getElementById("painel-plano");
+  var telas = dlg.querySelectorAll("[data-tela]");
+  var erroEl = dlg.querySelector('[data-p="erro"]');
+  var atual = null, enviando = false;
+  function reais(v){ return "R$ " + v.toLocaleString("pt-BR", { minimumFractionDigits: 2 }); }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]; }); }
+  var SETA = '<span class="acord__seta" aria-hidden="true"><svg viewBox="0 0 14 14" fill="none"><path d="m3 5 4 4 4-4" stroke="currentColor" stroke-width="2"/></svg></span>';
+
+  function tela(nome){
+    telas.forEach(function(t){ t.hidden = t.dataset.tela !== nome; });
+    dlg.querySelector(".painel__caixa").scrollTop = 0;
+  }
+  function listaPrecos(itens){
+    return '<ul class="precos">' + itens.map(function(i){
+      return '<li><span>' + esc(i[0]) + '</span><span class="precos__valor"><s>' + reais(i[1]) + '</s><b>' + reais(i[2]) + '</b></span></li>';
+    }).join("") + '</ul>';
+  }
+  function montarVantagens(p){
+    var inclusos = p.inclusos.map(function(i){
+      return '<div class="incluso"><span class="incluso__nome">' + esc(i.nome) + '</span>' +
+        '<span class="off">100% OFF</span><span class="incluso__preco"><span class="incluso__de">De <s>' + reais(i.de) + '</s></span><span class="incluso__por">Por R$ 0,00</span></span>' +
+        '<span class="dias-tag">Dias disponíveis</span><span class="incluso__nota">' + esc(i.dias) + '<small>' + esc(i.nota) + '</small></span></div>';
+    }).join("");
+    return (
+      '<details class="acord" open><summary><span class="acord__titulo"><strong>Serviços inclusos</strong><span>' +
+        esc(p.resumo) + '</span></span><span class="off">100% OFF</span>' + SETA + '</summary>' +
+        '<div class="acord__corpo">' + inclusos + '</div></details>' +
+      '<details class="acord"><summary><span class="acord__titulo"><strong>Serviços extras</strong><span>Desconto em todos os outros serviços</span></span><span class="off">10% OFF</span>' + SETA + '</summary>' +
+        '<div class="acord__corpo">' + listaPrecos(EXTRAS) + '</div></details>' +
+      '<details class="acord"><summary><span class="acord__titulo"><strong>Produtos · Cosméticos</strong><span>Desconto nos produtos da barbearia</span></span><span class="off">10% OFF</span>' + SETA + '</summary>' +
+        '<div class="acord__corpo">' + listaPrecos(PRODUTOS) + '</div></details>' +
+      '<details class="acord"><summary><span class="acord__titulo"><strong>Outros benefícios</strong><span>' + esc(OUTROS[0][0]) + '</span></span>' + SETA + '</summary>' +
+        '<div class="acord__corpo">' + OUTROS.map(function(o){ return '<p class="beneficio"><strong>' + esc(o[0]) + '</strong><span>' + esc(o[1]) + '</span></p>'; }).join("") + '</div></details>'
+    );
+  }
+
+  // mesma conta do agendamento e do painel "Sua conta"
+  var login = r10BlocoConta(dlg.querySelector("[data-login-plano]"), {
+    intro: "Para assinar, entre na sua conta ou crie uma.",
+    pedido: "Entre ou crie sua conta para assinar o plano. Depois você volta para cá."
+  });
+  login.preparar = login.render; login.liberar = function(){};
+
+  function abrir(id, direto){
+    var p = PLANOS[id]; if (!p) return;
+    atual = id; erroEl.textContent = "";
+    dlg.querySelectorAll('[data-p="nome"]').forEach(function(e){ e.textContent = p.nome; });
+    dlg.querySelectorAll('[data-p="preco"]').forEach(function(e){ e.textContent = reais(p.preco); });
+    dlg.querySelector('[data-p="vantagens"]').innerHTML = montarVantagens(p);
+    tela(direto ? "contratar" : "vantagens");
+    if (direto) login.preparar();
+    if (!dlg.open) dlg.showModal();
+    document.documentElement.classList.add("painel-aberto");
+  }
+  function fechar(){
+    if (dlg.open) dlg.close();
+  }
+  dlg.addEventListener("close", function(){
+    login.liberar();
+    document.documentElement.classList.remove("painel-aberto");
+    if (/^#plano=/.test(location.hash)) history.replaceState(null, "", location.pathname);
+  });
+  dlg.addEventListener("click", function(e){
+    if (e.target === dlg) return fechar();                       // clique fora fecha
+    if (e.target.closest("[data-fechar]")) return fechar();
+    if (e.target.closest("[data-voltar]")) return tela("vantagens");
+    if (e.target.closest("[data-contratar]")) { tela("contratar"); login.preparar(); erroEl.textContent = ""; return; }
+    if (e.target.closest("[data-confirmar]")) return confirmar();
+  });
+  document.addEventListener("click", function(e){
+    var b = e.target.closest("[data-plano]");
+    if (!b || dlg.contains(b)) return;
+    e.preventDefault(); abrir(b.dataset.plano, false);
+  });
+
+  function confirmar(){
+    var c = login.conta(), u = c && c.usuario();
+    erroEl.textContent = "";
+    if (!u) {
+      if (c) c.pedirLogin("Entre ou crie sua conta para assinar o plano. Depois você volta para cá.");
+      erroEl.textContent = "Para assinar, entre na sua conta ou crie uma."; return;
+    }
+    var nome = login.campo("nome").value.trim(), tel = login.campo("telefone").value;
+    if (nome.length < 2) { login.campo("nome").focus(); erroEl.textContent = "Digite seu nome."; return; }
+    if (!/^\d{10,11}$/.test(tel.replace(/\D/g, ""))) { login.campo("telefone").focus(); erroEl.textContent = "Digite seu WhatsApp com DDD."; return; }
+    if (enviando) return; enviando = true;
+    var botao = dlg.querySelector("[data-confirmar]"); botao.disabled = true;
+    c.cliente().then(function(sb){
+      return sb.rpc("pedir_assinatura", { p_plano: atual, p_nome: nome, p_telefone: tel });
+    }).then(function(r){
+      enviando = false; botao.disabled = false;
+      if (!r.error) {
+        dlg.querySelector('[data-p="ok"]').textContent = (r.data === "ja_ativa" ? "Você já tem um plano ativo, " : "Recebemos seu pedido do " + PLANOS[atual].nome + ", ") + nome.split(" ")[0] +
+          (r.data === "ja_ativa" ? ". Confira em Sua conta → Meu plano." : ". A R10 vai falar com você pelo WhatsApp " + tel + " para ativar a assinatura e combinar o pagamento.");
+        tela("ok");
+        return;
+      }
+      erroEl.textContent = "Não foi possível enviar agora. Tente de novo em instantes.";
+    }, function(){
+      enviando = false; botao.disabled = false;
+      erroEl.textContent = "Sem conexão agora. Confira sua internet e tente de novo.";
+    });
+  }
+
+  // vindo da área do cliente: index.html#plano=corte-ilimitado (na carga ou mudando só a âncora)
+  function peloEndereco(){
+    var m = /#plano=([\w-]+)/.exec(location.hash);
+    if (m && PLANOS[m[1]]) abrir(m[1], false);
+  }
+  addEventListener("hashchange", peloEndereco);
+  setTimeout(peloEndereco, 300);
+  window.r10AbrirPlano = abrir;     // usado pela aba "Meu plano" do painel da conta
+})();
+</script>
+<script type="module" src="assets/js/conta.js"></script>
+</body>
+</html>

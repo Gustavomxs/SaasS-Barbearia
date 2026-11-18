@@ -1,0 +1,5 @@
+# Site em testes. Os buscadores podem ler as páginas para enxergar o aviso
+# "noindex" (na página e no cabeçalho), que é o que tira o site da busca.
+# Bloquear aqui com Disallow impediria o Google de ver esse aviso.
+User-agent: *
+Allow: /

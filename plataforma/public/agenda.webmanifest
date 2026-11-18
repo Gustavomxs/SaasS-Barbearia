@@ -1,0 +1,17 @@
+{
+  "name": "R10 Agenda",
+  "short_name": "R10 Agenda",
+  "description": "Agenda dos barbeiros da R10 Barbearia",
+  "start_url": "/agenda",
+  "scope": "/agenda",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#170807",
+  "theme_color": "#740200",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/icones/r10-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icones/r10-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icones/r10-512-mascara.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

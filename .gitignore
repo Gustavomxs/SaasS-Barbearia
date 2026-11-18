@@ -1,0 +1,18 @@
+# --- segredos: nunca vão para o git ---
+# Codigo.gs tem a senha combinada com o Supabase (SEGREDO_SUPABASE)
+google-agenda/Codigo.gs
+.env
+.env.*
+*.pem
+
+# --- gerados / dependências ---
+node_modules/
+.next/
+.vercel/
+preview-animado.html
+teste-movimento.html
+
+# --- sistema ---
+Thumbs.db
+desktop.ini
+.DS_Store
